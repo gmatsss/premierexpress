@@ -48,11 +48,41 @@ const getWaitingForPartsJobs = async (req, res) => {
 
     console.log(`✅ Total 'Waiting for Parts' jobs: ${allJobs.length}`);
 
+    // 🧠 Classify jobs by pending duration
+    const today = new Date();
+
+    const categorizedJobs = {
+      emailOnly: [],
+      emailAndCall: [],
+      endOfLife: [],
+    };
+
+    allJobs.forEach((job) => {
+      const startDate = job.start_date || job.updated_at;
+      const pendingSince = new Date(startDate);
+      const diffTime = Math.abs(today - pendingSince);
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      // 🧩 Categorize
+      if (diffDays < 14) {
+        categorizedJobs.emailOnly.push({ ...job, daysPending: diffDays });
+      } else if (diffDays < 60) {
+        categorizedJobs.emailAndCall.push({ ...job, daysPending: diffDays });
+      } else {
+        categorizedJobs.endOfLife.push({ ...job, daysPending: diffDays });
+      }
+    });
+
     res.json({
       status: "success",
       pagesFetched: page,
       matched: allJobs.length,
-      data: allJobs,
+      summary: {
+        emailOnly: categorizedJobs.emailOnly.length,
+        emailAndCall: categorizedJobs.emailAndCall.length,
+        endOfLife: categorizedJobs.endOfLife.length,
+      },
+      data: categorizedJobs,
     });
   } catch (error) {
     console.error("❌ Error fetching jobs:", error.message);
