@@ -1,11 +1,18 @@
 const axios = require("axios");
 
 const getWaitingForPartsJobs = async (req, res) => {
-  const accessToken = process.env.SF_TOKEN;
+  const accessToken = req.body.accessToken;
   const baseUrl = "https://api.servicefusion.com/v1/jobs";
   const limit = 50;
   let page = 1;
   let allJobs = [];
+
+  if (!accessToken) {
+    return res.status(400).json({
+      status: "error",
+      message: "Missing accessToken in request body.",
+    });
+  }
 
   try {
     console.log("🔁 Fetching jobs with status 'Waiting for Parts'...");

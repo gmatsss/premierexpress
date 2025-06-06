@@ -5,7 +5,7 @@ const {
   getJobsByStatusName,
 } = require("../controller/serviceFusionController");
 
-router.get("/jobs", getWaitingForPartsJobs);
+router.post("/jobs", getWaitingForPartsJobs);
 
 router.get("/bystatus", getJobsByStatusName);
 

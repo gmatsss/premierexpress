@@ -13,10 +13,10 @@ const serviceFusionRoutes = require("./routes/serviceFusionRoutes");
 app.use(express.json());
 
 // Route handlers
-app.use("/", homeRoutes);
-app.use("/sf", serviceFusionRoutes);
+app.use("/", homeRoutes); // Handles "/", "/about", etc.
+app.use("/sf", serviceFusionRoutes); // Handles "/sf/jobs", etc.
 
 // Start the server
 app.listen(port, () => {
-  console.log(`✅ PremierExpress server listening on http://localhost:${port}`);
+  console.log(`✅ PremierExpress server listening on port ${port}`);
 });
