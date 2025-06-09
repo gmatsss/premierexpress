@@ -1,6 +1,8 @@
 const axios = require("axios");
 const { v4: uuidv4 } = require("uuid");
 
+const BASE_URL =
+  "https://premierexpress-csawb3cwgkgnchfy.canadacentral-01.azurewebsites.net";
 const sessions = {}; // Temporary in-memory storage
 
 exports.handleAnswer = (req, res) => {
@@ -15,7 +17,7 @@ exports.handleAnswer = (req, res) => {
     {
       action: "input",
       type: ["speech"],
-      eventUrl: [`${process.env.BASE_URL}/sf/speech?cid=${convoId}`],
+      eventUrl: [`${BASE_URL}/sf/speech?cid=${convoId}`],
     },
   ]);
 };
@@ -42,7 +44,7 @@ exports.handleSpeech = async (req, res) => {
     {
       action: "input",
       type: ["speech"],
-      eventUrl: [`${process.env.BASE_URL}/sf/speech?cid=${convoId}`],
+      eventUrl: [`${BASE_URL}/sf/speech?cid=${convoId}`],
     },
   ]);
 };
@@ -51,16 +53,13 @@ exports.handleEvent = (req, res) => {
   const event = req.body;
   console.log("📞 Vonage Event:", event);
 
-  // Example: handle rejected calls
   if (event.status === "rejected" || event.status === "unanswered") {
-    // You could now trigger voicemail logic, email, SMS, etc.
     console.log("🚨 Call not completed. Consider sending voicemail.");
   }
 
   res.status(200).end();
 };
 
-// 🔌 GPT Call
 async function getAiReply(history) {
   try {
     const response = await axios.post(
