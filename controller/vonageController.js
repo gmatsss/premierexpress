@@ -51,10 +51,18 @@ exports.handleSpeech = async (req, res) => {
 
 exports.handleEvent = async (req, res) => {
   const event = req.body;
+  const query = req.query; // ⬅️ This grabs invoice=..., days=..., etc.
+
   console.log("📞 Vonage Event:", event);
+  console.log("📎 Query Params:", query);
+
+  const payload = {
+    ...event,
+    metadata: query, // 👈 Forward the invoice metadata
+  };
 
   try {
-    await axios.post(N8N_WEBHOOK_URL, event); // Send to n8n
+    await axios.post(N8N_WEBHOOK_URL, payload);
     console.log("✅ Event sent to n8n.");
   } catch (err) {
     console.error("❌ Failed to send to n8n:", err.message);
