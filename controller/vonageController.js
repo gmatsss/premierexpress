@@ -3,6 +3,9 @@ const { v4: uuidv4 } = require("uuid");
 
 const BASE_URL =
   "https://premierexpress-csawb3cwgkgnchfy.canadacentral-01.azurewebsites.net";
+const N8N_WEBHOOK_URL =
+  "https://premierfitness.app.n8n.cloud/webhook/b9c1427a-f6ea-44df-9046-878c07cc7338";
+
 const sessions = {}; // Temporary in-memory storage
 
 exports.handleAnswer = (req, res) => {
@@ -27,13 +30,10 @@ exports.handleSpeech = async (req, res) => {
   const convoId = req.query.cid;
   const userText = speech?.results?.[0]?.text || "I didn't catch that.";
 
-  // Store user's message
   sessions[convoId]?.history.push({ role: "user", content: userText });
 
-  // Send to OpenAI
   const aiReply = await getAiReply(sessions[convoId].history);
 
-  // Store assistant response
   sessions[convoId].history.push({ role: "assistant", content: aiReply });
 
   return res.json([
@@ -49,12 +49,15 @@ exports.handleSpeech = async (req, res) => {
   ]);
 };
 
-exports.handleEvent = (req, res) => {
+exports.handleEvent = async (req, res) => {
   const event = req.body;
   console.log("📞 Vonage Event:", event);
 
-  if (event.status === "rejected" || event.status === "unanswered") {
-    console.log("🚨 Call not completed. Consider sending voicemail.");
+  try {
+    await axios.post(N8N_WEBHOOK_URL, event); // Send to n8n
+    console.log("✅ Event sent to n8n.");
+  } catch (err) {
+    console.error("❌ Failed to send to n8n:", err.message);
   }
 
   res.status(200).end();
