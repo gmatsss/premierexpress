@@ -364,6 +364,7 @@ const getinvoice = async (req, res) => {
         bill_to_customer_contact_id: invoice.bill_to_customer_contact_id,
         bill_to_email_id: invoice.bill_to_email_id,
         bill_to_phone_id: invoice.bill_to_phone_id,
+        pay_online_url: invoice.pay_online_url,
         category,
       });
     });
