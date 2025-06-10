@@ -5,11 +5,11 @@ const getWaitingForPartsJobs = async (req, res) => {
   const accessToken = req.body.accessToken;
   const isTestMode = req.body.testMode === true;
   const baseUrl = "https://api.servicefusion.com/v1/jobs";
+  const customerBaseUrl = "https://api.servicefusion.com/v1/customers";
   const limit = 50;
   let page = 1;
   let allJobs = [];
 
-  // 🔐 Guard clause for missing token
   if (!accessToken) {
     return res.status(400).json({
       status: "error",
@@ -18,16 +18,18 @@ const getWaitingForPartsJobs = async (req, res) => {
   }
 
   try {
-    // 🧪 TEST MODE — return mock jobs immediately
     if (isTestMode) {
       const testJobs = [
         {
           id: 1001,
           number: "JOB-001",
+          customer_id: 11111111,
           customer_name: "Edge Fitness Central",
           contact_first_name: "George",
           contact_last_name: "Maturan",
           contact_email: "gmaturan60@gmail.com",
+          contact_phone: "(555) 123-1111",
+          contact_name: "George Maturan",
           status: "4. Waiting For Parts",
           sub_status: "In Transit",
           daysPending: 13,
@@ -43,10 +45,13 @@ const getWaitingForPartsJobs = async (req, res) => {
         {
           id: 1002,
           number: "JOB-002",
+          customer_id: 22222222,
           customer_name: "Anytime Fitness West",
           contact_first_name: "George",
           contact_last_name: "Maturan",
           contact_email: "gmaturan60@gmail.com",
+          contact_phone: "(555) 123-2222",
+          contact_name: "George Maturan",
           status: "4. Waiting For Parts",
           sub_status: "On Order",
           daysPending: 17,
@@ -62,10 +67,13 @@ const getWaitingForPartsJobs = async (req, res) => {
         {
           id: 1003,
           number: "JOB-003",
+          customer_id: 33333333,
           customer_name: "Mansfield Gym & Spa",
           contact_first_name: "George",
           contact_last_name: "Maturan",
           contact_email: "gmaturan60@gmail.com",
+          contact_phone: "(555) 123-3333",
+          contact_name: "George Maturan",
           status: "4. Waiting For Parts",
           sub_status: "Backorder",
           daysPending: 74,
@@ -86,17 +94,15 @@ const getWaitingForPartsJobs = async (req, res) => {
       });
     }
 
-    // 🔁 Fetch live jobs
     console.log("🔁 Fetching jobs with status 'Waiting for Parts'...");
 
     while (true) {
       const encodedStatus = encodeURIComponent("4. Waiting For Parts");
       const fields = encodeURIComponent(
-        "id,number,customer_name,contact_first_name,contact_last_name,contact_email,status,sub_status,start_date,updated_at,note_to_customer,tech_notes,completion_notes,is_requires_follow_up"
+        "id,number,customer_id,customer_name,contact_first_name,contact_last_name,contact_email,status,sub_status,start_date,updated_at,note_to_customer,tech_notes,completion_notes,is_requires_follow_up"
       );
-      const url = `${baseUrl}?filters[status]=${encodedStatus}&page=${page}&per-page=${limit}&fields=${fields}`;
 
-      console.log(`📡 Requesting page ${page}: ${url}`);
+      const url = `${baseUrl}?filters[status]=${encodedStatus}&page=${page}&per-page=${limit}&fields=${fields}`;
 
       const response = await axios.get(url, {
         headers: {
@@ -106,25 +112,51 @@ const getWaitingForPartsJobs = async (req, res) => {
       });
 
       const jobs = response.data.items || [];
-      console.log(`📦 Page ${page}: Retrieved ${jobs.length} jobs`);
-
-      if (jobs.length === 0) {
-        console.log("⛔ No more jobs found. Stopping.");
-        break;
-      }
+      if (jobs.length === 0) break;
 
       allJobs.push(...jobs);
-
       page++;
-      if (jobs.length < limit) {
-        console.log("✅ Reached final page.");
-        break;
-      }
+      if (jobs.length < limit) break;
     }
 
-    console.log(`✅ Total 'Waiting for Parts' jobs: ${allJobs.length}`);
+    // 🔍 Fetch and merge customer contact info
+    const enrichJobWithCustomerContact = async (job) => {
+      try {
+        const customerUrl = `${customerBaseUrl}/${job.customer_id}?expand=contacts.phones,contacts.emails`;
+        const response = await axios.get(customerUrl, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            Accept: "application/json",
+          },
+        });
 
-    // 🧠 Classify jobs by days pending
+        const contacts = response.data.contacts || [];
+        const primary = contacts.find((c) => c.is_primary) || contacts[0];
+
+        const email = primary?.emails?.[0]?.email || null;
+        const phone = primary?.phones?.[0]?.phone || null;
+        const name = `${primary?.fname || ""} ${primary?.lname || ""}`.trim();
+
+        return {
+          ...job,
+          contact_email: email,
+          contact_phone: phone,
+          contact_name: name,
+        };
+      } catch (error) {
+        console.warn(
+          `⚠️ Failed to fetch contact for customer ${job.customer_id}`
+        );
+        return {
+          ...job,
+          contact_email: null,
+          contact_phone: null,
+          contact_name: null,
+        };
+      }
+    };
+
+    // 🧠 Categorize jobs with contact enrichment
     const today = new Date();
     const categorizedJobs = {
       emailOnly: [],
@@ -132,50 +164,52 @@ const getWaitingForPartsJobs = async (req, res) => {
       endOfLife: [],
     };
 
-    allJobs.forEach((job) => {
-      const startDate = job.start_date || job.updated_at;
-      const pendingSince = new Date(startDate);
-      const diffTime = Math.abs(today - pendingSince);
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const enrichedJobs = await Promise.all(
+      allJobs.map(async (job) => {
+        const startDate = job.start_date || job.updated_at;
+        const diffDays = Math.floor(
+          Math.abs(today - new Date(startDate)) / (1000 * 60 * 60 * 24)
+        );
 
-      if (diffDays < 14) {
-        categorizedJobs.emailOnly.push({
-          ...job,
-          daysPending: diffDays,
-          category: "emailOnly",
-        });
-      } else if (diffDays < 60) {
-        categorizedJobs.emailAndCall.push({
-          ...job,
-          daysPending: diffDays,
-          category: "emailAndCall",
-        });
-      } else {
-        categorizedJobs.endOfLife.push({
-          ...job,
-          daysPending: diffDays,
-          category: "endOfLife",
-        });
-      }
-    });
+        const enriched = await enrichJobWithCustomerContact(job);
+        enriched.daysPending = diffDays;
 
-    const flattenedJobs = [
-      ...categorizedJobs.emailOnly,
-      ...categorizedJobs.emailAndCall,
-      ...categorizedJobs.endOfLife,
-    ];
+        if (diffDays < 14) {
+          categorizedJobs.emailOnly.push({
+            ...enriched,
+            category: "emailOnly",
+          });
+        } else if (diffDays < 60) {
+          categorizedJobs.emailAndCall.push({
+            ...enriched,
+            category: "emailAndCall",
+          });
+        } else {
+          categorizedJobs.endOfLife.push({
+            ...enriched,
+            category: "endOfLife",
+          });
+        }
+
+        return enriched;
+      })
+    );
 
     res.json({
       status: "success",
       pagesFetched: page,
-      matched: flattenedJobs.length,
-      data: flattenedJobs,
+      matched: enrichedJobs.length,
+      data: [
+        ...categorizedJobs.emailOnly,
+        ...categorizedJobs.emailAndCall,
+        ...categorizedJobs.endOfLife,
+      ],
     });
   } catch (error) {
     console.error("❌ Error fetching jobs:", error.message);
     res.status(500).json({
       status: "error",
-      message: "Failed to fetch jobs from Service Fusion.",
+      message: "Failed to fetch or enrich jobs.",
       details: error.message,
     });
   }
