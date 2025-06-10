@@ -3,6 +3,7 @@ const dayjs = require("dayjs");
 
 const getWaitingForPartsJobs = async (req, res) => {
   const accessToken = req.body.accessToken;
+  const isTestMode = req.body.testMode === true;
   const baseUrl = "https://api.servicefusion.com/v1/jobs";
   const limit = 50;
   let page = 1;
@@ -17,83 +18,8 @@ const getWaitingForPartsJobs = async (req, res) => {
   }
 
   try {
-    console.log("🔁 Fetching jobs with status 'Waiting for Parts'...");
-
-    while (true) {
-      const encodedStatus = encodeURIComponent("4. Waiting For Parts");
-      const url = `${baseUrl}?filters[status]=${encodedStatus}&page=${page}&per-page=${limit}`;
-      console.log(`📡 Requesting page ${page}: ${url}`);
-
-      const response = await axios.get(url, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          Accept: "application/json",
-        },
-      });
-
-      const jobs = response.data.items || [];
-      console.log(`📦 Page ${page}: Retrieved ${jobs.length} jobs`);
-
-      if (jobs.length === 0) {
-        console.log("⛔ No more jobs found. Stopping.");
-        break;
-      }
-
-      allJobs.push(...jobs);
-
-      page++;
-      if (jobs.length < limit) {
-        console.log("✅ Reached final page.");
-        break;
-      }
-    }
-
-    console.log(`✅ Total 'Waiting for Parts' jobs: ${allJobs.length}`);
-
-    // 🧠 Classify jobs by pending duration
-    const today = new Date();
-
-    const categorizedJobs = {
-      emailOnly: [],
-      emailAndCall: [],
-      endOfLife: [],
-    };
-
-    allJobs.forEach((job) => {
-      const startDate = job.start_date || job.updated_at;
-      const pendingSince = new Date(startDate);
-      const diffTime = Math.abs(today - pendingSince);
-      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-      if (diffDays < 14) {
-        categorizedJobs.emailOnly.push({
-          ...job,
-          daysPending: diffDays,
-          category: "emailOnly",
-        });
-      } else if (diffDays < 60) {
-        categorizedJobs.emailAndCall.push({
-          ...job,
-          daysPending: diffDays,
-          category: "emailAndCall",
-        });
-      } else {
-        categorizedJobs.endOfLife.push({
-          ...job,
-          daysPending: diffDays,
-          category: "endOfLife",
-        });
-      }
-    });
-
-    const flattenedJobs = [
-      ...categorizedJobs.emailOnly,
-      ...categorizedJobs.emailAndCall,
-      ...categorizedJobs.endOfLife,
-    ];
-
-    // 🧪 TEST MODE — return mock jobs instead
-    if (req.body.testMode === true) {
+    // 🧪 TEST MODE — return mock jobs immediately
+    if (isTestMode) {
       const testJobs = [
         {
           id: 1001,
@@ -145,7 +71,7 @@ const getWaitingForPartsJobs = async (req, res) => {
           daysPending: 74,
           category: "endOfLife",
           is_requires_follow_up: true,
-          tech_notes: `LABOR 1 – Remove & Replace necessary parts. Hoist Multistation Model: H-2200. The leg press cable sent was incorrect. Ordered: 147 3/4” with 1 threaded end. Needed: 160 3/4” with 2 eyelets. Took back wrong cable. Unit still non-functional. Also noted: missing lanyard for stack pin and pull pin knobs.`,
+          tech_notes: `LABOR 1 – Remove & Replace necessary parts. Hoist Multistation Model: H-2200. The leg press cable sent was incorrect. Ordered: 147 3/4” with 1 threaded end. Needed: 160 3/4” with 2 eyelets. Took back wrong cable. Unit still non-functional.`,
           completion_notes: `3/19/2025 – Handles installed but incorrect cable prevents full function. Compressor needed for handle reattachment. Awaiting correct cable for full repair.`,
           note_to_customer:
             "This repair has been delayed over 60 days. We recommend considering a unit replacement or reaching out to our team to discuss alternative options.",
@@ -160,7 +86,81 @@ const getWaitingForPartsJobs = async (req, res) => {
       });
     }
 
-    // ✅ Return real classified data
+    // 🔁 Fetch live jobs
+    console.log("🔁 Fetching jobs with status 'Waiting for Parts'...");
+
+    while (true) {
+      const encodedStatus = encodeURIComponent("4. Waiting For Parts");
+      const url = `${baseUrl}?filters[status]=${encodedStatus}&page=${page}&per-page=${limit}`;
+      console.log(`📡 Requesting page ${page}: ${url}`);
+
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/json",
+        },
+      });
+
+      const jobs = response.data.items || [];
+      console.log(`📦 Page ${page}: Retrieved ${jobs.length} jobs`);
+
+      if (jobs.length === 0) {
+        console.log("⛔ No more jobs found. Stopping.");
+        break;
+      }
+
+      allJobs.push(...jobs);
+
+      page++;
+      if (jobs.length < limit) {
+        console.log("✅ Reached final page.");
+        break;
+      }
+    }
+
+    console.log(`✅ Total 'Waiting for Parts' jobs: ${allJobs.length}`);
+
+    // 🧠 Classify jobs by days pending
+    const today = new Date();
+    const categorizedJobs = {
+      emailOnly: [],
+      emailAndCall: [],
+      endOfLife: [],
+    };
+
+    allJobs.forEach((job) => {
+      const startDate = job.start_date || job.updated_at;
+      const pendingSince = new Date(startDate);
+      const diffTime = Math.abs(today - pendingSince);
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 14) {
+        categorizedJobs.emailOnly.push({
+          ...job,
+          daysPending: diffDays,
+          category: "emailOnly",
+        });
+      } else if (diffDays < 60) {
+        categorizedJobs.emailAndCall.push({
+          ...job,
+          daysPending: diffDays,
+          category: "emailAndCall",
+        });
+      } else {
+        categorizedJobs.endOfLife.push({
+          ...job,
+          daysPending: diffDays,
+          category: "endOfLife",
+        });
+      }
+    });
+
+    const flattenedJobs = [
+      ...categorizedJobs.emailOnly,
+      ...categorizedJobs.emailAndCall,
+      ...categorizedJobs.endOfLife,
+    ];
+
     res.json({
       status: "success",
       pagesFetched: page,
@@ -172,116 +172,6 @@ const getWaitingForPartsJobs = async (req, res) => {
     res.status(500).json({
       status: "error",
       message: "Failed to fetch jobs from Service Fusion.",
-      details: error.message,
-    });
-  }
-};
-
-const getJobsByStatusName = async (req, res) => {
-  const accessToken = process.env.SF_TOKEN;
-  const baseUrl = "https://api.servicefusion.com/v1";
-  const limit = 50;
-  const targetStatusName = "Waiting for Parts";
-
-  try {
-    // Step 1: Get status ID for "Waiting for Parts"
-    const statusResponse = await axios.get(
-      `${baseUrl}/job-statuses?per-page=50`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          Accept: "application/json",
-        },
-      }
-    );
-
-    const statuses = statusResponse.data.items || [];
-    const matchingStatus = statuses.find((status) =>
-      status.name.toLowerCase().includes(targetStatusName.toLowerCase())
-    );
-
-    if (!matchingStatus) {
-      return res.status(404).json({
-        status: "error",
-        message: `Status '${targetStatusName}' not found in job-statuses.`,
-      });
-    }
-
-    const jobStatusId = matchingStatus.id;
-    console.log(`🔍 Found status ID ${jobStatusId} for '${targetStatusName}'`);
-
-    const allJobs = [];
-    let currentPage = 1;
-    const batchSize = 10;
-    let keepGoing = true;
-
-    const fetchPage = async (page) => {
-      const url = `${baseUrl}/jobs?job_status_id=${jobStatusId}&page=${page}&per-page=${limit}`;
-      const response = await axios.get(url, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          Accept: "application/json",
-        },
-      });
-      return response.data.items || [];
-    };
-
-    while (keepGoing) {
-      const pageBatch = Array.from(
-        { length: batchSize },
-        (_, i) => currentPage + i
-      );
-      console.log(`🚀 Fetching pages: ${pageBatch.join(", ")}`);
-
-      const batchResults = await Promise.allSettled(pageBatch.map(fetchPage));
-
-      for (let i = 0; i < batchResults.length; i++) {
-        const result = batchResults[i];
-        const pageNumber = currentPage + i;
-
-        if (result.status === "fulfilled") {
-          const jobs = result.value;
-          console.log(`📦 Page ${pageNumber}: Retrieved ${jobs.length} jobs`);
-
-          if (jobs.length === 0) {
-            keepGoing = false;
-            break;
-          }
-
-          allJobs.push(...jobs);
-
-          // Stop if fewer jobs than limit
-          if (jobs.length < limit) {
-            keepGoing = false;
-            break;
-          }
-        } else {
-          console.error(
-            `❌ Failed to fetch page ${pageNumber}: ${result.reason.message}`
-          );
-          keepGoing = false;
-          break;
-        }
-      }
-
-      currentPage += batchSize;
-    }
-
-    console.log(
-      `✅ Total jobs with status '${targetStatusName}': ${allJobs.length}`
-    );
-
-    res.json({
-      status: "success",
-      matched: allJobs.length,
-      statusId: jobStatusId,
-      data: allJobs,
-    });
-  } catch (error) {
-    console.error("❌ Error fetching jobs by status:", error.message);
-    res.status(500).json({
-      status: "error",
-      message: "Failed to fetch jobs by status.",
       details: error.message,
     });
   }
@@ -707,6 +597,116 @@ const getinvoice = async (req, res) => {
 //     });
 //   }
 // };
+
+const getJobsByStatusName = async (req, res) => {
+  const accessToken = process.env.SF_TOKEN;
+  const baseUrl = "https://api.servicefusion.com/v1";
+  const limit = 50;
+  const targetStatusName = "Waiting for Parts";
+
+  try {
+    // Step 1: Get status ID for "Waiting for Parts"
+    const statusResponse = await axios.get(
+      `${baseUrl}/job-statuses?per-page=50`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/json",
+        },
+      }
+    );
+
+    const statuses = statusResponse.data.items || [];
+    const matchingStatus = statuses.find((status) =>
+      status.name.toLowerCase().includes(targetStatusName.toLowerCase())
+    );
+
+    if (!matchingStatus) {
+      return res.status(404).json({
+        status: "error",
+        message: `Status '${targetStatusName}' not found in job-statuses.`,
+      });
+    }
+
+    const jobStatusId = matchingStatus.id;
+    console.log(`🔍 Found status ID ${jobStatusId} for '${targetStatusName}'`);
+
+    const allJobs = [];
+    let currentPage = 1;
+    const batchSize = 10;
+    let keepGoing = true;
+
+    const fetchPage = async (page) => {
+      const url = `${baseUrl}/jobs?job_status_id=${jobStatusId}&page=${page}&per-page=${limit}`;
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/json",
+        },
+      });
+      return response.data.items || [];
+    };
+
+    while (keepGoing) {
+      const pageBatch = Array.from(
+        { length: batchSize },
+        (_, i) => currentPage + i
+      );
+      console.log(`🚀 Fetching pages: ${pageBatch.join(", ")}`);
+
+      const batchResults = await Promise.allSettled(pageBatch.map(fetchPage));
+
+      for (let i = 0; i < batchResults.length; i++) {
+        const result = batchResults[i];
+        const pageNumber = currentPage + i;
+
+        if (result.status === "fulfilled") {
+          const jobs = result.value;
+          console.log(`📦 Page ${pageNumber}: Retrieved ${jobs.length} jobs`);
+
+          if (jobs.length === 0) {
+            keepGoing = false;
+            break;
+          }
+
+          allJobs.push(...jobs);
+
+          // Stop if fewer jobs than limit
+          if (jobs.length < limit) {
+            keepGoing = false;
+            break;
+          }
+        } else {
+          console.error(
+            `❌ Failed to fetch page ${pageNumber}: ${result.reason.message}`
+          );
+          keepGoing = false;
+          break;
+        }
+      }
+
+      currentPage += batchSize;
+    }
+
+    console.log(
+      `✅ Total jobs with status '${targetStatusName}': ${allJobs.length}`
+    );
+
+    res.json({
+      status: "success",
+      matched: allJobs.length,
+      statusId: jobStatusId,
+      data: allJobs,
+    });
+  } catch (error) {
+    console.error("❌ Error fetching jobs by status:", error.message);
+    res.status(500).json({
+      status: "error",
+      message: "Failed to fetch jobs by status.",
+      details: error.message,
+    });
+  }
+};
 
 module.exports = {
   getWaitingForPartsJobs,
