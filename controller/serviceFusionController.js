@@ -223,6 +223,7 @@ const getWaitingForPartsJobs = async (req, res) => {
     // 🧠 Categorize jobs
     const today = new Date();
     const categorizedJobs = {
+      backorder: [],
       emailOnly: [],
       emailAndCall: [],
       endOfLife: [],
@@ -258,8 +259,15 @@ const getWaitingForPartsJobs = async (req, res) => {
         enriched.services =
           (job.services || []).map((s) => s.name).join(", ") || null;
 
-        // 🏷️ Assign category
-        if (diffDays < 14) {
+        // ✅ Assign "backorder" category if sub_status includes "backorder"
+        const subStatus = job.sub_status?.toLowerCase() || "";
+        if (
+          subStatus.includes("backorder") ||
+          subStatus.includes("back ordered")
+        ) {
+          enriched.category = "backorder";
+          categorizedJobs.backorder.push(enriched);
+        } else if (diffDays < 14) {
           enriched.category = "emailOnly";
           categorizedJobs.emailOnly.push(enriched);
         } else if (diffDays < 60) {
@@ -274,12 +282,12 @@ const getWaitingForPartsJobs = async (req, res) => {
       })
     );
 
-    // ✅ Respond
     res.json({
       status: "success",
       pagesFetched: page,
       matched: enrichedJobs.length,
       data: [
+        ...categorizedJobs.backorder,
         ...categorizedJobs.emailOnly,
         ...categorizedJobs.emailAndCall,
         ...categorizedJobs.endOfLife,
