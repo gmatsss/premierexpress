@@ -58,9 +58,9 @@ const getWaitingForPartsJobs = async (req, res) => {
           category: "emailAndCall",
           is_requires_follow_up: false,
           tech_notes:
-            "Parts for repair were ordered more than 2 weeks ago. Follow-up with supplier pending. Customer notified of expected delay.",
+            "LABOR 1\n\nRemove & Replace necessary parts. Make required adjustments for correct operation.\n\nLife Fitness Treadmill\nSN: HHT109499\nIssue: Console displays error E49 (low voltage to motor controller). Power verified. Fault traced to motor control board (MCB). Recommended: Replace MCB and Emergency Stop.\nParts Required:\n- 1x MDB PC board\n- 1x Emergency Stop\n\nLife Fitness Recumbent Bike\nSN: HRB101425\nIssue: Right thumb control is broken. Recommended: Replace thumb control to restore functionality.\nPart Required:\n- 1x Thumb control.",
           completion_notes:
-            "Pending part delivery confirmation. Repair to be rescheduled.",
+            "Pending part delivery and installation scheduling.",
           note_to_customer:
             "Disclaimer statement of all liability with services provided to or for any manufacturers, end user, or dealer regarding product defects, operation or function. All liability to or against Premier Fitness Service as an independent provider of services or products sold are held harmless of any claim regarding product, services rendered or personal injury. All sales are final. Refunds deemed necessary shall be issued by company check and the customer hereby waives any rights to charge back purchases. Any parts or products returned or cancelled, will be subject to a 40% restocking fee and all related shipping expenses.",
         },
