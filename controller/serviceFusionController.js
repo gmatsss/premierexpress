@@ -79,10 +79,60 @@ const getWaitingForPartsJobs = async (req, res) => {
           daysPending: 74,
           category: "endOfLife",
           is_requires_follow_up: true,
-          tech_notes: `LABOR 1 – Remove & Replace necessary parts. Hoist Multistation Model: H-2200. The leg press cable sent was incorrect. Ordered: 147 3/4” with 1 threaded end. Needed: 160 3/4” with 2 eyelets. Took back wrong cable. Unit still non-functional.`,
-          completion_notes: `3/19/2025 – Handles installed but incorrect cable prevents full function. Compressor needed for handle reattachment. Awaiting correct cable for full repair.`,
+          tech_notes:
+            "LABOR 1 – Remove & Replace necessary parts. Hoist Multistation Model: H-2200. The leg press cable sent was incorrect. Ordered: 147 3/4” with 1 threaded end. Needed: 160 3/4” with 2 eyelets. Took back wrong cable. Unit still non-functional.",
+          completion_notes:
+            "3/19/2025 – Handles installed but incorrect cable prevents full function. Compressor needed for handle reattachment. Awaiting correct cable for full repair.",
           note_to_customer:
             "This repair has been delayed over 60 days. We recommend considering a unit replacement or reaching out to our team to discuss alternative options.",
+        },
+        {
+          id: 1068377086,
+          number: "226078",
+          customer_id: 63454416,
+          customer_name: "SpringHill Suites Irvine Lake Forest",
+          contact_first_name: "michael",
+          contact_last_name: "patterson",
+          contact_email: "lakeforestshsgm@thmc.biz",
+          contact_phone: "(949) 322-9330",
+          contact_name: "michael  patterson",
+          status: "4. Waiting For Parts",
+          sub_status: null,
+          daysPending: 4,
+          category: "emailOnly",
+          is_requires_follow_up: false,
+          products: "Part, Part, Part, Part",
+          services: "Repair, Shipping",
+          tech_notes:
+            "LABOR 2\n\nRemove & Replace necessary parts. Make required adjustments for correct operation.\n\nPrecor Treadmill M: TRM600 SN: ATZXJ0120D015\nRunning belt is damaged and coming apart at the seams. Recommend replacing.\n1x Running belt\n\nPrecor Treadmill M: TRM600 SN: ATZXJ0120D016\nRunning belt is damaged and coming apart at the seams. Recommend replacing.\n1x Running belt\n\nPrecor Treadmill M: TRM600 SN: ATZXJ0120D011\nRunning belt is damaged and coming apart at the seams. Recommend replacing.\n1x Running belt\n\nPrecor Recumbent Bike M: RBK685 SN: AGRND25190040\nThe caps for the heart rates are missing and makes the wires be exposed. Recommend obtaining.\n1x End Cap",
+          completion_notes: null,
+          note_to_customer:
+            "Disclaimer statement of all liability with services provided to or for any manufacturers, end user, or dealer regarding product defects, operation or function. All liability to or against Premier Fitness Service as an independent provider of services or products sold are held harmless of any claim regarding product, services rendered or personal injury. All sales are final. Refunds deemed necessary shall be issued by company check and the customer hereby waives any rights to charge back purchases. Any parts or products returned or cancelled, will be subject to a 40% restocking fee and all related shipping expenses.",
+          assigned_techs: "Mike Martinez",
+        },
+        {
+          id: 1068232411,
+          number: "225667",
+          customer_id: 28520831,
+          customer_name: "IMT Stevenson Ranch",
+          contact_first_name: "Antonietta",
+          contact_last_name: "Torres",
+          contact_email: "Antonietta.Torres@imtresidential.com",
+          contact_phone: "(661) 287-9060",
+          contact_name: "Antonietta Torres",
+          status: "4. Waiting For Parts",
+          sub_status: null,
+          daysPending: 6,
+          category: "emailOnly",
+          is_requires_follow_up: true,
+          products: "Part",
+          services: "Repair, Shipping",
+          tech_notes:
+            "LABOR 1\n\nRemove & Replace necessary parts. Make required adjustments for correct operation.\n\nMatrix Versa Lat pulldown\nMissing the pads height adjusting pin\nRecommend to obtain and install\n1x Pop Pin Assembly",
+          completion_notes: null,
+          note_to_customer:
+            "Disclaimer statement of all liability with services provided to or for any manufacturers, end user, or dealer regarding product defects, operation or function. All liability to or against Premier Fitness Service as an independent provider of services or products sold are held harmless of any claim regarding product, services rendered or personal injury. All sales are final. Refunds deemed necessary shall be issued by company check and the customer hereby waives any rights to charge back purchases. Any parts or products returned or cancelled, will be subject to a 40% restocking fee and all related shipping expenses.",
+          assigned_techs: "Dmitrii Popov",
         },
       ];
 
@@ -98,8 +148,28 @@ const getWaitingForPartsJobs = async (req, res) => {
 
     while (true) {
       const encodedStatus = encodeURIComponent("4. Waiting For Parts");
+      const fields = encodeURIComponent(
+        [
+          "id",
+          "number",
+          "customer_id",
+          "customer_name",
+          "contact_first_name",
+          "contact_last_name",
+          "status",
+          "sub_status",
+          "start_date",
+          "updated_at",
+          "note_to_customer",
+          "tech_notes",
+          "completion_notes",
+          "is_requires_follow_up",
+        ].join(",")
+      );
 
-      const url = `${baseUrl}?filters[status]=${encodedStatus}&page=${page}&per-page=${limit}&fields=id,number,customer_id,customer_name,contact_first_name,contact_last_name,contact_email,status,sub_status,start_date,updated_at,note_to_customer,tech_notes,completion_notes,is_requires_follow_up&expand=agents,equipment,custom_fields,techs_assigned,tasks,notes,products,services,other_charges,labor_charges,expenses`;
+      const expand = encodeURIComponent("products,services,techs_assigned");
+
+      const url = `${baseUrl}?filters[status]=${encodedStatus}&page=${page}&per-page=${limit}&fields=${fields}&expand=${expand}`;
 
       const response = await axios.get(url, {
         headers: {
@@ -140,10 +210,7 @@ const getWaitingForPartsJobs = async (req, res) => {
           contact_phone: phone,
           contact_name: name,
         };
-      } catch (error) {
-        console.warn(
-          `⚠️ Failed to fetch contact for customer ${job.customer_id}`
-        );
+      } catch {
         return {
           ...job,
           contact_email: null,
@@ -153,7 +220,7 @@ const getWaitingForPartsJobs = async (req, res) => {
       }
     };
 
-    // 🧠 Categorize jobs with contact enrichment
+    // 🧠 Categorize jobs
     const today = new Date();
     const categorizedJobs = {
       emailOnly: [],
@@ -171,27 +238,43 @@ const getWaitingForPartsJobs = async (req, res) => {
         const enriched = await enrichJobWithCustomerContact(job);
         enriched.daysPending = diffDays;
 
+        // ✅ Flatten assigned techs
+        enriched.assigned_techs =
+          (job.techs_assigned || [])
+            .map((t) => `${t.first_name || ""} ${t.last_name || ""}`.trim())
+            .filter((name) => name !== "")
+            .join(", ") || null;
+
+        // Optional: remove original tech fields
+        delete enriched.techs_assigned;
+        delete enriched.tech_first_name;
+        delete enriched.tech_last_name;
+
+        // ✅ Flatten product names
+        enriched.products =
+          (job.products || []).map((p) => p.name).join(", ") || null;
+
+        // ✅ Flatten service names
+        enriched.services =
+          (job.services || []).map((s) => s.name).join(", ") || null;
+
+        // 🏷️ Assign category
         if (diffDays < 14) {
-          categorizedJobs.emailOnly.push({
-            ...enriched,
-            category: "emailOnly",
-          });
+          enriched.category = "emailOnly";
+          categorizedJobs.emailOnly.push(enriched);
         } else if (diffDays < 60) {
-          categorizedJobs.emailAndCall.push({
-            ...enriched,
-            category: "emailAndCall",
-          });
+          enriched.category = "emailAndCall";
+          categorizedJobs.emailAndCall.push(enriched);
         } else {
-          categorizedJobs.endOfLife.push({
-            ...enriched,
-            category: "endOfLife",
-          });
+          enriched.category = "endOfLife";
+          categorizedJobs.endOfLife.push(enriched);
         }
 
         return enriched;
       })
     );
 
+    // ✅ Respond
     res.json({
       status: "success",
       pagesFetched: page,
