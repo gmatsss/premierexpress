@@ -62,7 +62,7 @@ const getWaitingForPartsJobs = async (req, res) => {
           completion_notes:
             "Pending part delivery and installation scheduling.",
           note_to_customer:
-            "Disclaimer statement of all liability with services provided to or for any manufacturers, end user, or dealer regarding product defects, operation or function. All liability to or against Premier Fitness Service as an independent provider of services or products sold are held harmless of any claim regarding product, services rendered or personal injury. All sales are final. Refunds deemed necessary shall be issued by company check and the customer hereby waives any rights to charge back purchases. Any parts or products returned or cancelled, will be subject to a 40% restocking fee and all related shipping expenses.",
+            "Disclaimer statement of all liability with services provided to or for any manufacturers, end user, or dealer regarding product defects, operation or function...",
         },
         {
           id: 1003,
@@ -77,7 +77,7 @@ const getWaitingForPartsJobs = async (req, res) => {
           status: "4. Waiting For Parts",
           sub_status: "Backorder",
           daysPending: 74,
-          category: "endOfLife",
+          category: "backorder",
           is_requires_follow_up: true,
           tech_notes:
             "LABOR 1 – Remove & Replace necessary parts. Hoist Multistation Model: H-2200. The leg press cable sent was incorrect. Ordered: 147 3/4” with 1 threaded end. Needed: 160 3/4” with 2 eyelets. Took back wrong cable. Unit still non-functional.",
@@ -95,7 +95,7 @@ const getWaitingForPartsJobs = async (req, res) => {
           contact_last_name: "patterson",
           contact_email: "lakeforestshsgm@thmc.biz",
           contact_phone: "(949) 322-9330",
-          contact_name: "michael  patterson",
+          contact_name: "michael patterson",
           status: "4. Waiting For Parts",
           sub_status: null,
           daysPending: 4,
@@ -104,11 +104,10 @@ const getWaitingForPartsJobs = async (req, res) => {
           products: "Part, Part, Part, Part",
           services: "Repair, Shipping",
           tech_notes:
-            "LABOR 2\n\nRemove & Replace necessary parts. Make required adjustments for correct operation.\n\nPrecor Treadmill M: TRM600 SN: ATZXJ0120D015\nRunning belt is damaged and coming apart at the seams. Recommend replacing.\n1x Running belt\n\nPrecor Treadmill M: TRM600 SN: ATZXJ0120D016\nRunning belt is damaged and coming apart at the seams. Recommend replacing.\n1x Running belt\n\nPrecor Treadmill M: TRM600 SN: ATZXJ0120D011\nRunning belt is damaged and coming apart at the seams. Recommend replacing.\n1x Running belt\n\nPrecor Recumbent Bike M: RBK685 SN: AGRND25190040\nThe caps for the heart rates are missing and makes the wires be exposed. Recommend obtaining.\n1x End Cap",
+            "LABOR 2\n\nRemove & Replace necessary parts. Make required adjustments for correct operation.\n\nPrecor Treadmill M: TRM600 SN: ATZXJ0120D015\nRunning belt is damaged...",
           completion_notes: null,
           note_to_customer:
-            "Disclaimer statement of all liability with services provided to or for any manufacturers, end user, or dealer regarding product defects, operation or function. All liability to or against Premier Fitness Service as an independent provider of services or products sold are held harmless of any claim regarding product, services rendered or personal injury. All sales are final. Refunds deemed necessary shall be issued by company check and the customer hereby waives any rights to charge back purchases. Any parts or products returned or cancelled, will be subject to a 40% restocking fee and all related shipping expenses.",
-          assigned_techs: "Mike Martinez",
+            "Disclaimer statement of all liability with services provided...",
         },
         {
           id: 1068232411,
@@ -128,11 +127,34 @@ const getWaitingForPartsJobs = async (req, res) => {
           products: "Part",
           services: "Repair, Shipping",
           tech_notes:
-            "LABOR 1\n\nRemove & Replace necessary parts. Make required adjustments for correct operation.\n\nMatrix Versa Lat pulldown\nMissing the pads height adjusting pin\nRecommend to obtain and install\n1x Pop Pin Assembly",
+            "LABOR 1\n\nRemove & Replace necessary parts. Make required adjustments for correct operation.\n\nMatrix Versa Lat pulldown\nMissing the pads height adjusting pin...",
           completion_notes: null,
           note_to_customer:
-            "Disclaimer statement of all liability with services provided to or for any manufacturers, end user, or dealer regarding product defects, operation or function. All liability to or against Premier Fitness Service as an independent provider of services or products sold are held harmless of any claim regarding product, services rendered or personal injury. All sales are final. Refunds deemed necessary shall be issued by company check and the customer hereby waives any rights to charge back purchases. Any parts or products returned or cancelled, will be subject to a 40% restocking fee and all related shipping expenses.",
-          assigned_techs: "Dmitrii Popov",
+            "Disclaimer statement of all liability with services provided...",
+        },
+        {
+          id: 1063948816,
+          number: "216022",
+          customer_id: 28517923,
+          customer_name: "Carson Harbor Village",
+          contact_first_name: "Jacque",
+          contact_last_name: null,
+          contact_email: "carsonharbor@bandcmhc.com",
+          contact_phone: "(310) 515-0651",
+          contact_name: "Jacque",
+          status: "4. Waiting For Parts",
+          sub_status: "Back Ordered",
+          daysPending: 25,
+          category: "backorder",
+          is_requires_follow_up: false,
+          products: "Part, Part, Part, Part",
+          services: "Repair, Shipping",
+          tech_notes:
+            "LABOR 1\n\nRemove & Replace necessary parts. Make required adjustments for correct operation.\n\nBody solid multigym\nModel: EXM3000LPS...",
+          completion_notes: null,
+          assigned_techs: "Taylor Marvin",
+          note_to_customer:
+            "Disclaimer statement of all liability with services provided...",
         },
       ];
 
