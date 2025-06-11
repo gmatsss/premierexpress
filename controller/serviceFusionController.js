@@ -98,11 +98,8 @@ const getWaitingForPartsJobs = async (req, res) => {
 
     while (true) {
       const encodedStatus = encodeURIComponent("4. Waiting For Parts");
-      const fields = encodeURIComponent(
-        "id,number,customer_id,customer_name,contact_first_name,contact_last_name,contact_email,status,sub_status,start_date,updated_at,note_to_customer,tech_notes,completion_notes,is_requires_follow_up"
-      );
 
-      const url = `${baseUrl}?filters[status]=${encodedStatus}&page=${page}&per-page=${limit}&fields=${fields}`;
+      const url = `${baseUrl}?filters[status]=${encodedStatus}&page=${page}&per-page=${limit}&fields=id,number,customer_id,customer_name,contact_first_name,contact_last_name,contact_email,status,sub_status,start_date,updated_at,note_to_customer,tech_notes,completion_notes,is_requires_follow_up&expand=agents,equipment,custom_fields,techs_assigned,tasks,notes,products,services,other_charges,labor_charges,expenses`;
 
       const response = await axios.get(url, {
         headers: {
