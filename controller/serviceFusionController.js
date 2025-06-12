@@ -299,6 +299,36 @@ const getWaitingForPartsJobs = async (req, res) => {
     if (isTestMode) {
       const testJobs = [
         {
+          id: 1055451207,
+          number: "195780",
+          customer_id: 54708559,
+          customer_name: "HLC Windscape Gardens",
+          contact_first_name: "George",
+          contact_last_name: "Maturan",
+          contact_email: "gmaturan60@gmail.com",
+          contact_phone: "(555) 123-1111",
+          contact_name: "George Maturan",
+          status: "4. Waiting For Parts",
+          sub_status: null,
+          daysPending: 189,
+          category: "endOfLife",
+          is_requires_follow_up: false,
+          tech_notes:
+            "LABOR 1 \n\nRemove & Replace necessary parts. Make required adjustments for correct operation.\n\nSpirit elliptical model CE850 serial 8500451904000795 needs the handle selector cable and parts behind bearing. Manufacturer said this is still under warranty till next month but you have to call and order right there with the numbers they give you. Please call and verify what’s the deal.\n1x Handle Wire\n\nHoist H200t serial 00399 needs one of its cables replaced. I posted a photo with the cable description from the manual the manufacturer sent me.\n4x Strength Cable",
+          completion_notes:
+            "Batteries replaced.\n\nHoist cable was wrong but we should replace all of them\n\nSpirit elliptical model CE850 serial 8500451904000795 Selector cable was wrong",
+          note_to_customer:
+            "Disclaimer statement of all liability with services provided to or for any manufacturers, end user, or dealer regarding product defects, operation or function. All liability to or against Premier Fitness Service as an independent provider of services or products sold are held harmless of any claim regarding product, services rendered or personal injury. All sales are final. Refunds deemed necessary shall be issued by company check and the customer hereby waives any rights to charge back purchases. Any parts or products returned or cancelled, will be subject to a 40% restocking fee and all related shipping expenses.",
+          services: "Repair, Shipping",
+          products:
+            "Spirit Elliptical CE850 SN: 8500451904000795; Handle Wire\n\n*All parts are warrantied for 30-days or extended to the OEM offering, whichever is greater, and is provided to correct issues of premature and direct component failure., Hoist H200T SN: 00399; Strength Cable\n\n*All parts are warrantied for 30-days or extended to the OEM offering, whichever is greater, and is provided to correct issues of premature and direct component failure., BodyCraft VR400 Row Machine SN: N/A; Cardio Battery\n\n*All parts are warrantied for 30-days or extended to the OEM offering, whichever is greater, and is provided to correct issues of premature and direct component failure.",
+          assigned_techs: "Yarbin Maldonaldo",
+          start_date: "2024-12-05",
+          updated_at: "2025-06-11T16:51:11+00:00",
+          notes:
+            "Bodycraft VR400 row machine needs batteries for its monitor PN AA x3\n\nSpirit elliptical model CE850 serial 8500451904000795 needs the handle selector cable and parts behind bearing...\n\nHandle Wire: 9-99-SP0483 (Sole)\n\nHoist H200t serial 00399 needs one of its cables replaced...\n\nStrength Cable: 83-13-39002396 (FRP)...\n\nStrength Cable: 36-30-HSP2326 (NGS)\nStrength Cable: 89-10-HSP2584 (NGS)\nStrength Cable: 80-85-HSP2554 (NGS)\nStrength Cable: 62-70-HSP2466 (NGS)\n\nSelection number was wrong\nHandle Wire: 18-99-SP0485 (Sole Fitness)\n\nPamela is not working in company anymore.\n\nJob status changed to Re-approval, added additional parts on the estimate\n\nJob split to invoice successful part installed currently on Job #225214",
+        },
+        {
           id: 1001,
           number: "JOB-001",
           customer_id: 11111111,
