@@ -358,6 +358,37 @@ const getWaitingForPartsJobs = async (req, res) => {
           notes:
             "PO# 7595563:\nTracking Number: 1Z8Y85470363254117.\n\nReceived\n• 1x - Handle Wire\n• 4x - Strength Cable",
         },
+
+        {
+          id: 1007,
+          number: "JOB-007",
+          customer_id: 22222222,
+          customer_name: "Anytime Fitness - Pasadena",
+          contact_first_name: "George",
+          contact_last_name: "Maturan",
+          contact_email: "gmaturan60@gmail.com",
+          contact_phone: "(555) 123-1111",
+          contact_name: "George Maturan",
+          status: "4. Waiting For Parts",
+          sub_status: "Confirmed",
+          daysPending: 29,
+          category: "emailOnly",
+          is_requires_follow_up: true,
+          tech_notes:
+            "Technician confirmed diagnostic completed. Power supply and display board replacement needed. Parts ordered.",
+          completion_notes:
+            "Pending delivery of both power supply and display board. Once received, install to be scheduled.",
+          note_to_customer:
+            "Please be advised your repair is awaiting critical components. We will notify you immediately once they arrive to avoid further delay.",
+          services: "Repair",
+          products:
+            "Matrix Treadmill T5X SN: T5X2023041114; Display Board\nMatrix Treadmill T5X SN: T5X2023041114; Power Supply",
+          assigned_techs: "Cesar Tapia",
+          start_date: "2025-05-13",
+          updated_at: "2025-06-10T15:42:00+00:00",
+          notes:
+            "ETA for parts provided by vendor:\nDisplay Board – Expected June 18\nPower Supply – ETA June 20\n\nPending shipment confirmation from vendor support team.",
+        },
         {
           id: 1002,
           number: "JOB-002",
