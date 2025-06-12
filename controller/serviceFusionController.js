@@ -1,6 +1,284 @@
 const axios = require("axios");
 const dayjs = require("dayjs");
 
+// const getWaitingForPartsJobs = async (req, res) => {
+//   const accessToken = req.body.accessToken;
+//   const isTestMode = req.body.testMode === true;
+//   const baseUrl = "https://api.servicefusion.com/v1/jobs";
+//   const customerBaseUrl = "https://api.servicefusion.com/v1/customers";
+//   const limit = 50;
+//   let page = 1;
+//   let allJobs = [];
+
+//   if (!accessToken) {
+//     return res.status(400).json({
+//       status: "error",
+//       message: "Missing accessToken in request body.",
+//     });
+//   }
+
+//   try {
+//     if (isTestMode) {
+//       const testJobs = [
+//         {
+//           id: 1001,
+//           number: "JOB-001",
+//           customer_id: 11111111,
+//           customer_name: "Edge Fitness Central",
+//           contact_first_name: "George",
+//           contact_last_name: "Maturan",
+//           contact_email: "gmaturan60@gmail.com",
+//           contact_phone: "(555) 123-1111",
+//           contact_name: "George Maturan",
+//           status: "4. Waiting For Parts",
+//           sub_status: "In Transit",
+//           daysPending: 13,
+//           category: "emailOnly",
+//           is_requires_follow_up: true,
+//           tech_notes:
+//             "Technician verified that parts were ordered and are currently in transit. No further action until delivery is confirmed.",
+//           completion_notes:
+//             "Awaiting part arrival. Installation will be scheduled upon receipt.",
+//           note_to_customer:
+//             "Disclaimer statement of all liability with services provided to or for any manufacturers, end user, or dealer regarding product defects...",
+//           services: "Repair, Shipping",
+//           products:
+//             "Spirit Elliptical CE850 SN: 8500451904000795; Handle Wire\n\n*All parts are warrantied for 30-days...",
+//           assigned_techs: "Lee Gugler",
+//           start_date: "2025-05-01",
+//           updated_at: "2025-06-10T12:00:00+00:00",
+//           notes:
+//             "PO# 7595563:\nTracking Number: 1Z8Y85470363254117.\n\nReceived\n• 1x - Handle Wire\n• 4x - Strength Cable",
+//         },
+//         {
+//           id: 1002,
+//           number: "JOB-002",
+//           customer_id: 22222222,
+//           customer_name: "Anytime Fitness West",
+//           contact_first_name: "George",
+//           contact_last_name: "Maturan",
+//           contact_email: "gmaturan60@gmail.com",
+//           contact_phone: "(555) 123-2222",
+//           contact_name: "George Maturan",
+//           status: "4. Waiting For Parts",
+//           sub_status: "On Order",
+//           daysPending: 17,
+//           category: "emailAndCall",
+//           is_requires_follow_up: false,
+//           tech_notes:
+//             "LABOR 1\n\nRemove & Replace necessary parts. Make required adjustments for correct operation.\n\nLife Fitness Treadmill\nSN: HHT109499\nIssue: Console displays error E49...\nParts Required:\n- 1x MDB PC board\n- 1x Emergency Stop",
+//           completion_notes:
+//             "Pending part delivery and installation scheduling.",
+//           note_to_customer:
+//             "Disclaimer statement of all liability with services provided...",
+//           services: "Repair, Shipping",
+//           products:
+//             "Life Fitness Treadmill SN: HHT109499; Emergency Stop, MDB Board",
+//           assigned_techs: "Lee Gugler",
+//           start_date: "2025-05-01",
+//           updated_at: "2025-06-10T12:00:00+00:00",
+//           notes:
+//             "PO# 7595564:\nTracking Number: 1Z8Y85470363254118.\n\nPending arrival of MDB Board and Emergency Stop",
+//         },
+//         {
+//           id: 1003,
+//           number: "JOB-003",
+//           customer_id: 33333333,
+//           customer_name: "Mansfield Gym & Spa",
+//           contact_first_name: "George",
+//           contact_last_name: "Maturan",
+//           contact_email: "gmaturan60@gmail.com",
+//           contact_phone: "(555) 123-3333",
+//           contact_name: "George Maturan",
+//           status: "4. Waiting For Parts",
+//           sub_status: "Backorder",
+//           daysPending: 74,
+//           category: "backorder",
+//           is_requires_follow_up: true,
+//           tech_notes:
+//             "LABOR 1 – Remove & Replace necessary parts. Hoist Multistation Model: H-2200. The leg press cable sent was incorrect. Ordered: 147 3/4” with 1 threaded end. Needed: 160 3/4” with 2 eyelets...",
+//           completion_notes:
+//             "Handles installed but incorrect cable prevents full function. Awaiting correct cable for full repair.",
+//           note_to_customer:
+//             "This repair has been delayed over 60 days. We recommend considering a unit replacement...",
+//           services: "Repair, Shipping",
+//           products:
+//             "Hoist Multistation SN: H-2200; Strength Cable\n\n*All parts are warrantied for 30-days...",
+//           assigned_techs: "Lee Gugler",
+//           start_date: "2024-12-01",
+//           updated_at: "2025-06-10T12:00:00+00:00",
+//           notes:
+//             "PO# 7595428:\nStrength Cable Part# MX10227 on backorder. ETA 5/23",
+//         },
+//       ];
+
+//       return res.json({
+//         status: "success",
+//         pagesFetched: 1,
+//         matched: testJobs.length,
+//         data: testJobs,
+//       });
+//     }
+
+//     console.log("🔁 Fetching jobs with status 'Waiting for Parts'...");
+
+//     while (true) {
+//       const encodedStatus = encodeURIComponent("4. Waiting For Parts");
+//       const fields = encodeURIComponent(
+//         [
+//           "id",
+//           "number",
+//           "customer_id",
+//           "customer_name",
+//           "contact_first_name",
+//           "contact_last_name",
+//           "status",
+//           "sub_status",
+//           "start_date",
+//           "updated_at",
+//           "note_to_customer",
+//           "tech_notes",
+//           "completion_notes",
+//           "is_requires_follow_up",
+//         ].join(",")
+//       );
+
+//       const expand = encodeURIComponent("products,services,techs_assigned");
+
+//       const url = `${baseUrl}?filters[status]=${encodedStatus}&page=${page}&per-page=${limit}&fields=${fields}&expand=${expand}`;
+
+//       const response = await axios.get(url, {
+//         headers: {
+//           Authorization: `Bearer ${accessToken}`,
+//           Accept: "application/json",
+//         },
+//       });
+
+//       const jobs = response.data.items || [];
+//       if (jobs.length === 0) break;
+
+//       allJobs.push(...jobs);
+//       page++;
+//       if (jobs.length < limit) break;
+//     }
+
+//     // 🔍 Fetch and merge customer contact info
+//     const enrichJobWithCustomerContact = async (job) => {
+//       try {
+//         const customerUrl = `${customerBaseUrl}/${job.customer_id}?expand=contacts.phones,contacts.emails`;
+//         const response = await axios.get(customerUrl, {
+//           headers: {
+//             Authorization: `Bearer ${accessToken}`,
+//             Accept: "application/json",
+//           },
+//         });
+
+//         const contacts = response.data.contacts || [];
+//         const primary = contacts.find((c) => c.is_primary) || contacts[0];
+
+//         const email = primary?.emails?.[0]?.email || null;
+//         const phone = primary?.phones?.[0]?.phone || null;
+//         const name = `${primary?.fname || ""} ${primary?.lname || ""}`.trim();
+
+//         return {
+//           ...job,
+//           contact_email: email,
+//           contact_phone: phone,
+//           contact_name: name,
+//         };
+//       } catch {
+//         return {
+//           ...job,
+//           contact_email: null,
+//           contact_phone: null,
+//           contact_name: null,
+//         };
+//       }
+//     };
+
+//     // 🧠 Categorize jobs
+//     const today = new Date();
+//     const categorizedJobs = {
+//       backorder: [],
+//       emailOnly: [],
+//       emailAndCall: [],
+//       endOfLife: [],
+//     };
+
+//     const enrichedJobs = await Promise.all(
+//       allJobs.map(async (job) => {
+//         const startDate = job.start_date || job.updated_at;
+//         const diffDays = Math.floor(
+//           Math.abs(today - new Date(startDate)) / (1000 * 60 * 60 * 24)
+//         );
+
+//         const enriched = await enrichJobWithCustomerContact(job);
+//         enriched.daysPending = diffDays;
+
+//         // ✅ Flatten assigned techs
+//         enriched.assigned_techs =
+//           (job.techs_assigned || [])
+//             .map((t) => `${t.first_name || ""} ${t.last_name || ""}`.trim())
+//             .filter((name) => name !== "")
+//             .join(", ") || null;
+
+//         // Optional: remove original tech fields
+//         delete enriched.techs_assigned;
+//         delete enriched.tech_first_name;
+//         delete enriched.tech_last_name;
+
+//         // ✅ Flatten product names
+//         enriched.products =
+//           (job.products || []).map((p) => p.name).join(", ") || null;
+
+//         // ✅ Flatten service names
+//         enriched.services =
+//           (job.services || []).map((s) => s.name).join(", ") || null;
+
+//         // ✅ Assign "backorder" category if sub_status includes "backorder"
+//         const subStatus = job.sub_status?.toLowerCase() || "";
+//         if (
+//           subStatus.includes("backorder") ||
+//           subStatus.includes("back ordered")
+//         ) {
+//           enriched.category = "backorder";
+//           categorizedJobs.backorder.push(enriched);
+//         } else if (diffDays < 14) {
+//           enriched.category = "emailOnly";
+//           categorizedJobs.emailOnly.push(enriched);
+//         } else if (diffDays < 60) {
+//           enriched.category = "emailAndCall";
+//           categorizedJobs.emailAndCall.push(enriched);
+//         } else {
+//           enriched.category = "endOfLife";
+//           categorizedJobs.endOfLife.push(enriched);
+//         }
+
+//         return enriched;
+//       })
+//     );
+
+//     res.json({
+//       status: "success",
+//       pagesFetched: page,
+//       matched: enrichedJobs.length,
+//       data: [
+//         ...categorizedJobs.backorder,
+//         ...categorizedJobs.emailOnly,
+//         ...categorizedJobs.emailAndCall,
+//         ...categorizedJobs.endOfLife,
+//       ],
+//     });
+//   } catch (error) {
+//     console.error("❌ Error fetching jobs:", error.message);
+//     res.status(500).json({
+//       status: "error",
+//       message: "Failed to fetch or enrich jobs.",
+//       details: error.message,
+//     });
+//   }
+// };
+
 const getWaitingForPartsJobs = async (req, res) => {
   const accessToken = req.body.accessToken;
   const isTestMode = req.body.testMode === true;
@@ -40,7 +318,15 @@ const getWaitingForPartsJobs = async (req, res) => {
           completion_notes:
             "Awaiting part arrival. Installation will be scheduled upon receipt.",
           note_to_customer:
-            "Disclaimer statement of all liability with services provided to or for any manufacturers, end user, or dealer regarding product defects, operation or function. All liability to or against Premier Fitness Service as an independent provider of services or products sold are held harmless of any claim regarding product, services rendered or personal injury. All sales are final. Refunds deemed necessary shall be issued by company check and the customer hereby waives any rights to charge back purchases. Any parts or products returned or cancelled, will be subject to a 40% restocking fee and all related shipping expenses.",
+            "Disclaimer statement of all liability with services provided to or for any manufacturers, end user, or dealer regarding product defects...",
+          services: "Repair, Shipping",
+          products:
+            "Spirit Elliptical CE850 SN: 8500451904000795; Handle Wire\n\n*All parts are warrantied for 30-days...",
+          assigned_techs: "Lee Gugler",
+          start_date: "2025-05-01",
+          updated_at: "2025-06-10T12:00:00+00:00",
+          notes:
+            "PO# 7595563:\nTracking Number: 1Z8Y85470363254117.\n\nReceived\n• 1x - Handle Wire\n• 4x - Strength Cable",
         },
         {
           id: 1002,
@@ -58,11 +344,19 @@ const getWaitingForPartsJobs = async (req, res) => {
           category: "emailAndCall",
           is_requires_follow_up: false,
           tech_notes:
-            "LABOR 1\n\nRemove & Replace necessary parts. Make required adjustments for correct operation.\n\nLife Fitness Treadmill\nSN: HHT109499\nIssue: Console displays error E49 (low voltage to motor controller). Power verified. Fault traced to motor control board (MCB). Recommended: Replace MCB and Emergency Stop.\nParts Required:\n- 1x MDB PC board\n- 1x Emergency Stop\n\nLife Fitness Recumbent Bike\nSN: HRB101425\nIssue: Right thumb control is broken. Recommended: Replace thumb control to restore functionality.\nPart Required:\n- 1x Thumb control.",
+            "LABOR 1\n\nRemove & Replace necessary parts. Make required adjustments for correct operation.\n\nLife Fitness Treadmill\nSN: HHT109499\nIssue: Console displays error E49...\nParts Required:\n- 1x MDB PC board\n- 1x Emergency Stop",
           completion_notes:
             "Pending part delivery and installation scheduling.",
           note_to_customer:
-            "Disclaimer statement of all liability with services provided to or for any manufacturers, end user, or dealer regarding product defects, operation or function...",
+            "Disclaimer statement of all liability with services provided...",
+          services: "Repair, Shipping",
+          products:
+            "Life Fitness Treadmill SN: HHT109499; Emergency Stop, MDB Board",
+          assigned_techs: "Lee Gugler",
+          start_date: "2025-05-01",
+          updated_at: "2025-06-10T12:00:00+00:00",
+          notes:
+            "PO# 7595564:\nTracking Number: 1Z8Y85470363254118.\n\nPending arrival of MDB Board and Emergency Stop",
         },
         {
           id: 1003,
@@ -80,81 +374,48 @@ const getWaitingForPartsJobs = async (req, res) => {
           category: "backorder",
           is_requires_follow_up: true,
           tech_notes:
-            "LABOR 1 – Remove & Replace necessary parts. Hoist Multistation Model: H-2200. The leg press cable sent was incorrect. Ordered: 147 3/4” with 1 threaded end. Needed: 160 3/4” with 2 eyelets. Took back wrong cable. Unit still non-functional.",
+            "LABOR 1 – Remove & Replace necessary parts. Hoist Multistation Model: H-2200. The leg press cable sent was incorrect. Ordered: 147 3/4” with 1 threaded end. Needed: 160 3/4” with 2 eyelets...",
           completion_notes:
-            "3/19/2025 – Handles installed but incorrect cable prevents full function. Compressor needed for handle reattachment. Awaiting correct cable for full repair.",
+            "Handles installed but incorrect cable prevents full function. Awaiting correct cable for full repair.",
           note_to_customer:
-            "This repair has been delayed over 60 days. We recommend considering a unit replacement or reaching out to our team to discuss alternative options.",
-        },
-        {
-          id: 1068377086,
-          number: "226078",
-          customer_id: 63454416,
-          customer_name: "SpringHill Suites Irvine Lake Forest",
-          contact_first_name: "michael",
-          contact_last_name: "patterson",
-          contact_email: "lakeforestshsgm@thmc.biz",
-          contact_phone: "(949) 322-9330",
-          contact_name: "michael patterson",
-          status: "4. Waiting For Parts",
-          sub_status: null,
-          daysPending: 4,
-          category: "emailOnly",
-          is_requires_follow_up: false,
-          products: "Part, Part, Part, Part",
+            "This repair has been delayed over 60 days. We recommend considering a unit replacement...",
           services: "Repair, Shipping",
-          tech_notes:
-            "LABOR 2\n\nRemove & Replace necessary parts. Make required adjustments for correct operation.\n\nPrecor Treadmill M: TRM600 SN: ATZXJ0120D015\nRunning belt is damaged...",
-          completion_notes: null,
-          note_to_customer:
-            "Disclaimer statement of all liability with services provided...",
+          products:
+            "Hoist Multistation SN: H-2200; Strength Cable\n\n*All parts are warrantied for 30-days...",
+          assigned_techs: "Lee Gugler",
+          start_date: "2024-12-01",
+          updated_at: "2025-06-10T12:00:00+00:00",
+          notes:
+            "PO# 7595428:\nStrength Cable Part# MX10227 on backorder. ETA 5/23",
         },
         {
-          id: 1068232411,
-          number: "225667",
-          customer_id: 28520831,
-          customer_name: "IMT Stevenson Ranch",
-          contact_first_name: "Antonietta",
-          contact_last_name: "Torres",
-          contact_email: "Antonietta.Torres@imtresidential.com",
-          contact_phone: "(661) 287-9060",
-          contact_name: "Antonietta Torres",
+          id: 1004,
+          number: "JOB-004",
+          customer_id: 44444444,
+          customer_name: "City Sports Training",
+          contact_first_name: "George",
+          contact_last_name: "Maturan",
+          contact_email: "gmaturan60@gmail.com",
+          contact_phone: "(555) 123-4444",
+          contact_name: "George Maturan",
           status: "4. Waiting For Parts",
-          sub_status: null,
-          daysPending: 6,
-          category: "emailOnly",
+          sub_status: "Awaiting Approval",
+          daysPending: 33,
+          category: "emailAndCall",
           is_requires_follow_up: true,
-          products: "Part",
-          services: "Repair, Shipping",
           tech_notes:
-            "LABOR 1\n\nRemove & Replace necessary parts. Make required adjustments for correct operation.\n\nMatrix Versa Lat pulldown\nMissing the pads height adjusting pin...",
+            "LABOR 1\n\nReplace frayed cable on Matrix Leg Press.\nConfirmed SN: VS-S70. Safety issue reported.\n\n1x Strength Cable required.",
           completion_notes: null,
           note_to_customer:
-            "Disclaimer statement of all liability with services provided...",
-        },
-        {
-          id: 1063948816,
-          number: "216022",
-          customer_id: 28517923,
-          customer_name: "Carson Harbor Village",
-          contact_first_name: "Jacque",
-          contact_last_name: null,
-          contact_email: "carsonharbor@bandcmhc.com",
-          contact_phone: "(310) 515-0651",
-          contact_name: "Jacque",
-          status: "4. Waiting For Parts",
-          sub_status: "Back Ordered",
-          daysPending: 25,
-          category: "backorder",
-          is_requires_follow_up: false,
-          products: "Part, Part, Part, Part",
+            "We are currently awaiting part delivery and final approval. Thank you for your patience.",
           services: "Repair, Shipping",
-          tech_notes:
-            "LABOR 1\n\nRemove & Replace necessary parts. Make required adjustments for correct operation.\n\nBody solid multigym\nModel: EXM3000LPS...",
-          completion_notes: null,
-          assigned_techs: "Taylor Marvin",
-          note_to_customer:
-            "Disclaimer statement of all liability with services provided...",
+          products:
+            "Matrix Leg Press SN: VS-S70; Strength Cable\n\n*All parts are warrantied for 30-days...",
+          assigned_techs: "Chance Schilhab",
+          start_date: "2025-05-10",
+          updated_at: "2025-06-11T10:45:00+00:00",
+          notes:
+            "PO# 7595600:\nMatrix Strength Cable Part# MX10227 pending shipment.\nEstimated delivery: 6/15/2025",
         },
       ];
 
@@ -189,9 +450,14 @@ const getWaitingForPartsJobs = async (req, res) => {
         ].join(",")
       );
 
-      const expand = encodeURIComponent("products,services,techs_assigned");
+      const expand = encodeURIComponent(
+        "products,services,techs_assigned,notes"
+      );
 
-      const url = `${baseUrl}?filters[status]=${encodedStatus}&page=${page}&per-page=${limit}&fields=${fields}&expand=${expand}`;
+      const url =
+        `${baseUrl}?filters[status]=${encodedStatus}` +
+        `&page=${page}&per-page=${limit}` +
+        `&fields=${fields}&expand=${expand}`;
 
       const response = await axios.get(url, {
         headers: {
@@ -202,29 +468,28 @@ const getWaitingForPartsJobs = async (req, res) => {
 
       const jobs = response.data.items || [];
       if (jobs.length === 0) break;
-
       allJobs.push(...jobs);
       page++;
       if (jobs.length < limit) break;
     }
 
-    // 🔍 Fetch and merge customer contact info
     const enrichJobWithCustomerContact = async (job) => {
       try {
-        const customerUrl = `${customerBaseUrl}/${job.customer_id}?expand=contacts.phones,contacts.emails`;
-        const response = await axios.get(customerUrl, {
+        const customerUrl =
+          `${customerBaseUrl}/${job.customer_id}` +
+          `?expand=contacts.phones,contacts.emails`;
+        const resp = await axios.get(customerUrl, {
           headers: {
             Authorization: `Bearer ${accessToken}`,
             Accept: "application/json",
           },
         });
-
-        const contacts = response.data.contacts || [];
-        const primary = contacts.find((c) => c.is_primary) || contacts[0];
-
-        const email = primary?.emails?.[0]?.email || null;
-        const phone = primary?.phones?.[0]?.phone || null;
-        const name = `${primary?.fname || ""} ${primary?.lname || ""}`.trim();
+        const contacts = resp.data.contacts || [];
+        const primary = contacts.find((c) => c.is_primary) || contacts[0] || {};
+        const email = primary.emails?.[0]?.email || null;
+        const phone = primary.phones?.[0]?.phone || null;
+        const name =
+          `${primary.fname || ""} ${primary.lname || ""}`.trim() || null;
 
         return {
           ...job,
@@ -242,7 +507,6 @@ const getWaitingForPartsJobs = async (req, res) => {
       }
     };
 
-    // 🧠 Categorize jobs
     const today = new Date();
     const categorizedJobs = {
       backorder: [],
@@ -253,46 +517,43 @@ const getWaitingForPartsJobs = async (req, res) => {
 
     const enrichedJobs = await Promise.all(
       allJobs.map(async (job) => {
+        const enriched = await enrichJobWithCustomerContact(job);
+
         const startDate = job.start_date || job.updated_at;
-        const diffDays = Math.floor(
+        enriched.daysPending = Math.floor(
           Math.abs(today - new Date(startDate)) / (1000 * 60 * 60 * 24)
         );
 
-        const enriched = await enrichJobWithCustomerContact(job);
-        enriched.daysPending = diffDays;
+        enriched.notes =
+          (job.notes || [])
+            .map((n) => n.notes?.trim())
+            .filter((txt) => txt)
+            .join("\n\n") || null;
 
-        // ✅ Flatten assigned techs
         enriched.assigned_techs =
           (job.techs_assigned || [])
-            .map((t) => `${t.first_name || ""} ${t.last_name || ""}`.trim())
-            .filter((name) => name !== "")
+            .map((t) => `${t.first_name} ${t.last_name}`.trim())
+            .filter((n) => n)
             .join(", ") || null;
 
-        // Optional: remove original tech fields
-        delete enriched.techs_assigned;
-        delete enriched.tech_first_name;
-        delete enriched.tech_last_name;
-
-        // ✅ Flatten product names
+        // ✅ Replace product names with product descriptions
         enriched.products =
-          (job.products || []).map((p) => p.name).join(", ") || null;
+          (job.products || [])
+            .map((p) => p.description)
+            .filter(Boolean)
+            .join(", ") || null;
 
-        // ✅ Flatten service names
         enriched.services =
           (job.services || []).map((s) => s.name).join(", ") || null;
 
-        // ✅ Assign "backorder" category if sub_status includes "backorder"
-        const subStatus = job.sub_status?.toLowerCase() || "";
-        if (
-          subStatus.includes("backorder") ||
-          subStatus.includes("back ordered")
-        ) {
+        const sub = job.sub_status?.toLowerCase() || "";
+        if (sub.includes("backorder") || sub.includes("back ordered")) {
           enriched.category = "backorder";
           categorizedJobs.backorder.push(enriched);
-        } else if (diffDays < 14) {
+        } else if (enriched.daysPending < 14) {
           enriched.category = "emailOnly";
           categorizedJobs.emailOnly.push(enriched);
-        } else if (diffDays < 60) {
+        } else if (enriched.daysPending < 60) {
           enriched.category = "emailAndCall";
           categorizedJobs.emailAndCall.push(enriched);
         } else {
