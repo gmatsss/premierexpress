@@ -471,13 +471,12 @@ const testInvoices = [
     bill_to_customer_id: null,
     bill_to_customer_location_id: 32439987,
     bill_to_customer_contact_id: 47404013,
-    bill_to_email_id: "gmaturan60@gmail.com",
+    bill_to_email_id: null,
     bill_to_phone_id: "(213) 626-9528",
     pay_online_url:
       "https://app.servicefusion.com/invoiceOnline?id=t3Wd8PYEvlj_Tf26l5Q_ZDnwTmxX2_b2LNj1fUR_9iY&key=4vHc7itaR26Nd16Sg2CBtn2VfNON7VR4_3HjZ1901-o",
     category: "31-60_days",
   },
-  // … include the remaining 8 of your original 31–60 entries here …
 
   // 1. not_due_yet
   {
@@ -495,9 +494,10 @@ const testInvoices = [
     bill_to_customer_id: null,
     bill_to_customer_location_id: null,
     bill_to_customer_contact_id: null,
-    bill_to_email_id: "gmaturan60@gmail.com",
+    bill_to_email_id: null,
     bill_to_phone_id: "555-1001",
-    pay_online_url: "https://example.com/invoice/98101",
+    pay_online_url:
+      "https://app.servicefusion.com/invoiceOnline?id=7a1bC12345abcXYZ1&key=KEY-1",
     category: "not_due_yet",
   },
 
@@ -517,9 +517,10 @@ const testInvoices = [
     bill_to_customer_id: null,
     bill_to_customer_location_id: null,
     bill_to_customer_contact_id: null,
-    bill_to_email_id: "gmaturan60@gmail.com",
+    bill_to_email_id: null,
     bill_to_phone_id: "555-1002",
-    pay_online_url: "https://example.com/invoice/98102",
+    pay_online_url:
+      "https://app.servicefusion.com/invoiceOnline?id=8a1bC12345abcXYZ2&key=KEY-2",
     category: "0-30_days",
   },
 
@@ -539,9 +540,10 @@ const testInvoices = [
     bill_to_customer_id: null,
     bill_to_customer_location_id: null,
     bill_to_customer_contact_id: null,
-    bill_to_email_id: "gmaturan60@gmail.com",
+    bill_to_email_id: null,
     bill_to_phone_id: "555-1003",
-    pay_online_url: "https://example.com/invoice/98103",
+    pay_online_url:
+      "https://app.servicefusion.com/invoiceOnline?id=9a1bC12345abcXYZ3&key=KEY-3",
     category: "61-90_days",
   },
 
@@ -561,9 +563,10 @@ const testInvoices = [
     bill_to_customer_id: null,
     bill_to_customer_location_id: null,
     bill_to_customer_contact_id: null,
-    bill_to_email_id: "gmaturan60@gmail.com",
+    bill_to_email_id: null,
     bill_to_phone_id: "555-1004",
-    pay_online_url: "https://example.com/invoice/98104",
+    pay_online_url:
+      "https://app.servicefusion.com/invoiceOnline?id=0a1bC12345abcXYZ4&key=KEY-4",
     category: "91+_days",
   },
 ];
