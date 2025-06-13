@@ -25,7 +25,7 @@ router.post("/answer", handleAnswer);
 router.post("/speech", handleSpeech);
 router.post("/event", handleEvent);
 
-//Collection Email Follow Up invoice
+//waitingforparts Email Follow Up invoice
 router.post("/jobanswer", handleJobsAnswer);
 router.post("/jobspeech", handleJobsSpeech);
 router.post("/jobevent", handleJobsEvent);

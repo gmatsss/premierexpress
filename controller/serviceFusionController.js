@@ -333,428 +333,6 @@ getWaitingForPartsJobs = async (req, res) => {
   }
 };
 
-function getDueDate(invoice) {
-  const issueDate = dayjs(invoice.date);
-  const termsRaw = invoice.terms?.toLowerCase().trim() || "net30";
-  const match = termsRaw.match(/net\s*(\d+)/);
-
-  if (match) {
-    const days = parseInt(match[1], 10);
-    return issueDate.add(days, "day");
-  }
-
-  if (termsRaw.includes("cod") || termsRaw.includes("receipt")) {
-    return issueDate;
-  }
-
-  return issueDate.add(30, "day");
-}
-
-const getinvoice = async (req, res) => {
-  const { accessToken, testMode } = req.body;
-
-  if (!accessToken) {
-    return res.status(400).json({ error: "Access token is required." });
-  }
-
-  // 🧪 Test data (with category)
-  if (testMode) {
-    const testData = [
-      {
-        id: 1001,
-        number: 12345,
-        date: "2025-04-01T00:00:00Z",
-        terms: "NET30",
-        dueDate: "2025-05-01",
-        daysPastDue: 45,
-        total: 500,
-        currency: "$",
-        customer: "Test Client A",
-        customer_contact: "Jane Doe",
-        payment_terms: "NET30",
-        bill_to_customer_id: 3001,
-        bill_to_customer_location_id: 3011,
-        bill_to_customer_contact_id: 3021,
-        bill_to_email_id: "testclienta@email.com",
-        bill_to_phone_id: "(555) 111-2222",
-        category: "31-60_days",
-      },
-      {
-        id: 1002,
-        number: 12346,
-        date: "2025-03-01T00:00:00Z",
-        terms: "NET30",
-        dueDate: "2025-03-31",
-        daysPastDue: 75,
-        total: 750,
-        currency: "$",
-        customer: "Test Client B",
-        customer_contact: "John Smith",
-        payment_terms: "NET30",
-        bill_to_customer_id: 3002,
-        bill_to_customer_location_id: 3012,
-        bill_to_customer_contact_id: 3022,
-        bill_to_email_id: "testclientb@email.com",
-        bill_to_phone_id: "(555) 333-4444",
-        category: "61-90_days",
-      },
-      {
-        id: 1003,
-        number: 12347,
-        date: "2024-12-01T00:00:00Z",
-        terms: "NET30",
-        dueDate: "2024-12-31",
-        daysPastDue: 160,
-        total: 1200,
-        currency: "$",
-        customer: "Test Client C",
-        customer_contact: "Susan Lee",
-        payment_terms: "NET30",
-        bill_to_customer_id: 3003,
-        bill_to_customer_location_id: 3013,
-        bill_to_customer_contact_id: 3023,
-        bill_to_email_id: "testclientc@email.com",
-        bill_to_phone_id: "(555) 555-6666",
-        category: "91+_days",
-      },
-      {
-        id: 1004,
-        number: 12348,
-        date: "2025-06-01T00:00:00Z",
-        terms: "NET30",
-        dueDate: "2025-07-01",
-        daysPastDue: -22,
-        total: 400,
-        currency: "$",
-        customer: "Test Client D",
-        customer_contact: "Paul Green",
-        payment_terms: "NET30",
-        bill_to_customer_id: 3004,
-        bill_to_customer_location_id: 3014,
-        bill_to_customer_contact_id: 3024,
-        bill_to_email_id: "testclientd@email.com",
-        bill_to_phone_id: "(555) 777-8888",
-        category: "not_due_yet",
-      },
-      {
-        id: 1005,
-        number: 12349,
-        date: "2025-05-20T00:00:00Z",
-        terms: "NET30",
-        dueDate: "2025-06-19",
-        daysPastDue: 5,
-        total: 600,
-        currency: "$",
-        customer: "Test Client E",
-        customer_contact: "Emily Stone",
-        payment_terms: "NET30",
-        bill_to_customer_id: 3005,
-        bill_to_customer_location_id: 3015,
-        bill_to_customer_contact_id: 3025,
-        bill_to_email_id: "testcliente@email.com",
-        bill_to_phone_id: "(555) 999-0000",
-        category: "0-30_days",
-      },
-    ];
-
-    return res.status(200).json({
-      success: true,
-      testMode: true,
-      count: testData.length,
-      data: testData,
-    });
-  }
-
-  try {
-    const response = await axios.get(
-      "https://api.servicefusion.com/v1/invoices",
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          Accept: "application/json",
-        },
-        params: {
-          "per-page": 50,
-          sort: "-date",
-        },
-      }
-    );
-
-    const invoices = response.data.items || [];
-    const today = dayjs();
-    const results = [];
-
-    invoices.forEach((invoice) => {
-      if (invoice.is_paid || !invoice.date) return;
-
-      const dueDate = getDueDate(invoice);
-      const daysPastDue = today.diff(dueDate, "day");
-
-      let category = null;
-      if (daysPastDue < 0) {
-        category = "not_due_yet";
-      } else if (daysPastDue <= 30) {
-        category = "0-30_days";
-      } else if (daysPastDue <= 60) {
-        category = "31-60_days";
-      } else if (daysPastDue <= 90) {
-        category = "61-90_days";
-      } else {
-        category = "91+_days";
-      }
-
-      results.push({
-        id: invoice.id,
-        number: invoice.number,
-        date: invoice.date,
-        terms: invoice.terms,
-        dueDate: dueDate.format("YYYY-MM-DD"),
-        daysPastDue,
-        total: invoice.total,
-        currency: invoice.currency,
-        customer: invoice.customer,
-        customer_contact: invoice.customer_contact,
-        payment_terms: invoice.payment_terms,
-        bill_to_customer_id: invoice.bill_to_customer_id,
-        bill_to_customer_location_id: invoice.bill_to_customer_location_id,
-        bill_to_customer_contact_id: invoice.bill_to_customer_contact_id,
-        bill_to_email_id: invoice.bill_to_email_id,
-        bill_to_phone_id: invoice.bill_to_phone_id,
-        pay_online_url: invoice.pay_online_url,
-        category,
-      });
-    });
-
-    return res.status(200).json({
-      success: true,
-      count: results.length,
-      data: results,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      error: "Failed to fetch invoices from Service Fusion.",
-      details: error.message,
-    });
-  }
-};
-
-// const getinvoice = async (req, res) => {
-//   const { accessToken, testMode } = req.body;
-
-//   if (!accessToken) {
-//     return res.status(400).json({ error: "Access token is required." });
-//   }
-
-//   if (testMode) {
-//     const testData = [
-//       {
-//         id: 1001,
-//         number: 12345,
-//         date: "2025-04-01T00:00:00Z",
-//         terms: "NET30",
-//         dueDate: "2025-05-01",
-//         daysPastDue: 45,
-//         total: 500,
-//         currency: "$",
-//         customer: "Test Client A",
-//         customer_contact: "Jane Doe",
-//         payment_terms: "NET30",
-//         bill_to_customer_id: 3001,
-//         bill_to_customer_location_id: 3011,
-//         bill_to_customer_contact_id: 3021,
-//         bill_to_email_id: "testclienta@email.com",
-//         bill_to_phone_id: "(555) 111-2222",
-//         category: "31-60_days",
-//       },
-//       {
-//         id: 1002,
-//         number: 12346,
-//         date: "2025-03-01T00:00:00Z",
-//         terms: "NET30",
-//         dueDate: "2025-03-31",
-//         daysPastDue: 75,
-//         total: 750,
-//         currency: "$",
-//         customer: "Test Client B",
-//         customer_contact: "John Smith",
-//         payment_terms: "NET30",
-//         bill_to_customer_id: 3002,
-//         bill_to_customer_location_id: 3012,
-//         bill_to_customer_contact_id: 3022,
-//         bill_to_email_id: "testclientb@email.com",
-//         bill_to_phone_id: "(555) 333-4444",
-//         category: "61-90_days",
-//       },
-//       {
-//         id: 1003,
-//         number: 12347,
-//         date: "2024-12-01T00:00:00Z",
-//         terms: "NET30",
-//         dueDate: "2024-12-31",
-//         daysPastDue: 160,
-//         total: 1200,
-//         currency: "$",
-//         customer: "Test Client C",
-//         customer_contact: "Susan Lee",
-//         payment_terms: "NET30",
-//         bill_to_customer_id: 3003,
-//         bill_to_customer_location_id: 3013,
-//         bill_to_customer_contact_id: 3023,
-//         bill_to_email_id: "testclientc@email.com",
-//         bill_to_phone_id: "(555) 555-6666",
-//         category: "91+_days",
-//       },
-//       {
-//         id: 1004,
-//         number: 12348,
-//         date: "2025-06-01T00:00:00Z",
-//         terms: "NET30",
-//         dueDate: "2025-07-01",
-//         daysPastDue: -22,
-//         total: 400,
-//         currency: "$",
-//         customer: "Test Client D",
-//         customer_contact: "Paul Green",
-//         payment_terms: "NET30",
-//         bill_to_customer_id: 3004,
-//         bill_to_customer_location_id: 3014,
-//         bill_to_customer_contact_id: 3024,
-//         bill_to_email_id: "testclientd@email.com",
-//         bill_to_phone_id: "(555) 777-8888",
-//         category: "not_due_yet",
-//       },
-//       {
-//         id: 1005,
-//         number: 12349,
-//         date: "2025-05-20T00:00:00Z",
-//         terms: "NET30",
-//         dueDate: "2025-06-19",
-//         daysPastDue: 5,
-//         total: 600,
-//         currency: "$",
-//         customer: "Test Client E",
-//         customer_contact: "Emily Stone",
-//         payment_terms: "NET30",
-//         bill_to_customer_id: 3005,
-//         bill_to_customer_location_id: 3015,
-//         bill_to_customer_contact_id: 3025,
-//         bill_to_email_id: "testcliente@email.com",
-//         bill_to_phone_id: "(555) 999-0000",
-//         category: "0-30_days",
-//       },
-//     ];
-//     return res.status(200).json({
-//       success: true,
-//       testMode: true,
-//       count: testData.length,
-//       data: testData,
-//     });
-//   }
-
-//   try {
-//     const response = await axios.get(
-//       "https://api.servicefusion.com/v1/invoices",
-//       {
-//         headers: {
-//           Authorization: `Bearer ${accessToken}`,
-//           Accept: "application/json",
-//         },
-//         params: {
-//           "per-page": 50,
-//           sort: "-date",
-//         },
-//       }
-//     );
-
-//     const invoices = response.data.items || [];
-//     const today = dayjs();
-//     const results = [];
-
-//     for (const invoice of invoices) {
-//       if (invoice.is_paid || !invoice.date) continue;
-
-//       const dueDate = getDueDate(invoice);
-//       const daysPastDue = today.diff(dueDate, "day");
-
-//       let category = null;
-//       if (daysPastDue < 0) category = "not_due_yet";
-//       else if (daysPastDue <= 30) category = "0-30_days";
-//       else if (daysPastDue <= 60) category = "31-60_days";
-//       else if (daysPastDue <= 90) category = "61-90_days";
-//       else category = "91+_days";
-
-//       // 🔍 Fetch customer details using customer_id
-//       const customerId = invoice.bill_to_customer_id;
-//       let customerContactName = "N/A";
-//       let customerEmail = "N/A";
-//       let customerPhone = "N/A";
-
-//       try {
-//         const customerRes = await axios.get(
-//           `https://api.servicefusion.com/v1/customers/${customerId}`,
-//           {
-//             headers: {
-//               Authorization: `Bearer ${accessToken}`,
-//               Accept: "application/json",
-//             },
-//             params: {
-//               expand: "contacts.phones,contacts.emails",
-//             },
-//           }
-//         );
-
-//         const customer = customerRes.data;
-//         const primaryContact =
-//           customer.contacts?.find((c) => c.is_primary) ||
-//           customer.contacts?.[0];
-//         customerContactName = `${primaryContact?.fname || ""} ${
-//           primaryContact?.lname || ""
-//         }`.trim();
-//         customerEmail = primaryContact?.emails?.[0]?.email || "N/A";
-//         customerPhone = primaryContact?.phones?.[0]?.phone || "N/A";
-//       } catch (err) {
-//         console.warn(
-//           `Customer lookup failed for ID ${customerId}:`,
-//           err.message
-//         );
-//       }
-
-//       results.push({
-//         id: invoice.id,
-//         number: invoice.number,
-//         date: invoice.date,
-//         terms: invoice.terms,
-//         dueDate: dueDate.format("YYYY-MM-DD"),
-//         daysPastDue,
-//         total: invoice.total,
-//         currency: invoice.currency,
-//         customer: invoice.customer,
-//         payment_terms: invoice.payment_terms,
-//         bill_to_customer_id: invoice.bill_to_customer_id,
-//         bill_to_customer_location_id: invoice.bill_to_customer_location_id,
-//         bill_to_customer_contact_id: invoice.bill_to_customer_contact_id,
-//         bill_to_email_id: invoice.bill_to_email_id,
-//         bill_to_phone_id: invoice.bill_to_phone_id,
-//         category,
-//         customer_contact_name: customerContactName,
-//         customer_contact_email: customerEmail,
-//         customer_contact_phone: customerPhone,
-//       });
-//     }
-
-//     return res.status(200).json({
-//       success: true,
-//       count: results.length,
-//       data: results,
-//     });
-//   } catch (error) {
-//     return res.status(500).json({
-//       error: "Failed to fetch invoices or customer details.",
-//       details: error.message,
-//     });
-//   }
-// };
-
 const getJobsByStatusName = async (req, res) => {
   const accessToken = process.env.SF_TOKEN;
   const baseUrl = "https://api.servicefusion.com/v1";
@@ -860,6 +438,233 @@ const getJobsByStatusName = async (req, res) => {
     res.status(500).json({
       status: "error",
       message: "Failed to fetch jobs by status.",
+      details: error.message,
+    });
+  }
+};
+
+function getDueDate(invoice) {
+  const issueDate = dayjs(invoice.date);
+  const termsRaw = invoice.terms?.toLowerCase().trim() || "net30";
+  const match = termsRaw.match(/net\s*(\d+)/);
+
+  if (match) return issueDate.add(parseInt(match[1], 10), "day");
+  if (termsRaw.includes("cod") || termsRaw.includes("receipt"))
+    return issueDate;
+
+  return issueDate.add(30, "day"); // Default fallback
+}
+
+const testInvoices = [
+  {
+    id: 1001580084,
+    number: 78606,
+    date: "2025-12-31T00:00:00+00:00",
+    dueDate: "2026-03-31",
+    daysPastDue: -290,
+    total: 18074.93,
+    is_paid: false,
+    currency: "$",
+    customer: "The Lorenzo",
+    customer_contact: "Vlad",
+    payment_terms: null,
+    bill_to_customer_id: null,
+    bill_to_customer_location_id: 32439987,
+    bill_to_customer_contact_id: 47404013,
+    bill_to_email_id: "gmaturan60@gmail.com",
+    bill_to_phone_id: "(213) 626-9528",
+    pay_online_url:
+      "https://app.servicefusion.com/invoiceOnline?id=t3Wd8PYEvlj_Tf26l5Q_ZDnwTmxX2_b2LNj1fUR_9iY&key=4vHc7itaR26Nd16Sg2CBtn2VfNON7VR4_3HjZ1901-o",
+    category: "31-60_days",
+  },
+  // … include the remaining 8 of your original 31–60 entries here …
+
+  // 1. not_due_yet
+  {
+    id: 1031000001,
+    number: 98101,
+    date: "2025-07-01T00:00:00+00:00",
+    dueDate: "2025-08-01",
+    daysPastDue: -10,
+    total: 250.0,
+    is_paid: false,
+    currency: "$",
+    customer: "Future Property",
+    customer_contact: "Alice",
+    payment_terms: null,
+    bill_to_customer_id: null,
+    bill_to_customer_location_id: null,
+    bill_to_customer_contact_id: null,
+    bill_to_email_id: "gmaturan60@gmail.com",
+    bill_to_phone_id: "555-1001",
+    pay_online_url: "https://example.com/invoice/98101",
+    category: "not_due_yet",
+  },
+
+  // 2. 0–30_days
+  {
+    id: 1031000002,
+    number: 98102,
+    date: "2025-05-01T00:00:00+00:00",
+    dueDate: "2025-05-31",
+    daysPastDue: 10,
+    total: 500.0,
+    is_paid: false,
+    currency: "$",
+    customer: "Quick Pay Co.",
+    customer_contact: "Bob",
+    payment_terms: null,
+    bill_to_customer_id: null,
+    bill_to_customer_location_id: null,
+    bill_to_customer_contact_id: null,
+    bill_to_email_id: "gmaturan60@gmail.com",
+    bill_to_phone_id: "555-1002",
+    pay_online_url: "https://example.com/invoice/98102",
+    category: "0-30_days",
+  },
+
+  // 3. 61–90_days
+  {
+    id: 1031000003,
+    number: 98103,
+    date: "2025-02-01T00:00:00+00:00",
+    dueDate: "2025-03-03",
+    daysPastDue: 75,
+    total: 750.0,
+    is_paid: false,
+    currency: "$",
+    customer: "Medium Term LLC",
+    customer_contact: "Carol",
+    payment_terms: null,
+    bill_to_customer_id: null,
+    bill_to_customer_location_id: null,
+    bill_to_customer_contact_id: null,
+    bill_to_email_id: "gmaturan60@gmail.com",
+    bill_to_phone_id: "555-1003",
+    pay_online_url: "https://example.com/invoice/98103",
+    category: "61-90_days",
+  },
+
+  // 4. 91+_days
+  {
+    id: 1031000004,
+    number: 98104,
+    date: "2024-12-01T00:00:00+00:00",
+    dueDate: "2025-01-01",
+    daysPastDue: 120,
+    total: 1000.0,
+    is_paid: false,
+    currency: "$",
+    customer: "Long Delinquent Inc.",
+    customer_contact: "Dave",
+    payment_terms: null,
+    bill_to_customer_id: null,
+    bill_to_customer_location_id: null,
+    bill_to_customer_contact_id: null,
+    bill_to_email_id: "gmaturan60@gmail.com",
+    bill_to_phone_id: "555-1004",
+    pay_online_url: "https://example.com/invoice/98104",
+    category: "91+_days",
+  },
+];
+
+const getinvoice = async (req, res) => {
+  const { accessToken, testMode } = req.body;
+  if (!accessToken) {
+    return res.status(400).json({ error: "Missing access token" });
+  }
+
+  if (testMode) {
+    return res.status(200).json({
+      success: true,
+      allUnpaid: testInvoices.every((inv) => inv.is_paid === false),
+      count: testInvoices.length,
+      data: testInvoices,
+    });
+  }
+
+  const baseUrl = "https://api.servicefusion.com/v1/invoices";
+  const perPage = 50;
+  let currentPage = 1;
+  let hasMore = true;
+  const today = dayjs();
+  const allResults = [];
+
+  try {
+    while (hasMore) {
+      console.log(`🔄 Fetching page ${currentPage} of unpaid invoices...`);
+
+      const { data } = await axios.get(baseUrl, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/json",
+        },
+        params: {
+          "per-page": perPage,
+          page: currentPage,
+          sort: "-date",
+          "filter[is_paid]": false,
+        },
+      });
+
+      const invoices = data.items || [];
+      invoices.forEach((inv) => {
+        // extra safety check
+        if (inv.is_paid) return;
+
+        const dueDate = getDueDate(inv);
+        const daysPastDue = today.diff(dueDate, "day");
+        let category = "not_due_yet";
+        if (daysPastDue > 0 && daysPastDue <= 30) category = "0-30_days";
+        else if (daysPastDue <= 60) category = "31-60_days";
+        else if (daysPastDue <= 90) category = "61-90_days";
+        else if (daysPastDue > 90) category = "91+_days";
+
+        allResults.push({
+          id: inv.id,
+          number: inv.number,
+          date: inv.date,
+          dueDate: dueDate.format("YYYY-MM-DD"),
+          daysPastDue,
+          total: inv.total,
+          is_paid: inv.is_paid, // ← add this
+          currency: inv.currency,
+          customer: inv.customer,
+          customer_contact: inv.customer_contact,
+          payment_terms: inv.payment_terms,
+          bill_to_customer_id: inv.bill_to_customer_id,
+          bill_to_customer_location_id: inv.bill_to_customer_location_id,
+          bill_to_customer_contact_id: inv.bill_to_customer_contact_id,
+          bill_to_email_id: inv.bill_to_email_id,
+          bill_to_phone_id: inv.bill_to_phone_id,
+          pay_online_url: inv.pay_online_url,
+          category,
+        });
+      });
+
+      console.log(
+        `📦 Page ${currentPage} added ${invoices.length} unpaid invoices ` +
+          `(running total: ${allResults.length})`
+      );
+
+      currentPage++;
+      hasMore = currentPage <= (data._meta?.pageCount || 1);
+    }
+
+    // sanity check
+    const allAreUnpaid = allResults.every((inv) => inv.is_paid === false);
+    console.log(`✅ All fetched invoices unpaid? ${allAreUnpaid}`);
+
+    return res.status(200).json({
+      success: true,
+      allUnpaid: allAreUnpaid, // ← tells you if any slipped through
+      count: allResults.length,
+      data: allResults,
+    });
+  } catch (error) {
+    console.error("❌ Error fetching invoices:", error.message);
+    return res.status(500).json({
+      error: "Failed to fetch invoices from Service Fusion.",
       details: error.message,
     });
   }
