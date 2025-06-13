@@ -471,7 +471,7 @@ const testInvoices = [
     bill_to_customer_id: null,
     bill_to_customer_location_id: 32439987,
     bill_to_customer_contact_id: 47404013,
-    bill_to_email_id: null,
+    bill_to_email_id: "gmaturan60@gmail.com",
     bill_to_phone_id: "(213) 626-9528",
     pay_online_url:
       "https://app.servicefusion.com/invoiceOnline?id=t2MXT9voOBhZ2JTULSae0XSUNunFNLz0U7xAoIgE2S0&key=YDBKOJeJtqiMqT4Kwa4vvwfoKsxGRd-BKnQao91pEvI",
@@ -494,7 +494,7 @@ const testInvoices = [
     bill_to_customer_id: null,
     bill_to_customer_location_id: null,
     bill_to_customer_contact_id: null,
-    bill_to_email_id: null,
+    bill_to_email_id: "gmaturan60@gmail.com",
     bill_to_phone_id: "555-1001",
     pay_online_url:
       "https://app.servicefusion.com/invoiceOnline?id=Qeb7xoAfLWHk4xvYPalQdggJEcmeEJS241b9Qrc_iIY&key=hrlgM7xWufARU9ypxJTLSH945IqRJ9CgX2XtyT6qSIE",
@@ -517,7 +517,7 @@ const testInvoices = [
     bill_to_customer_id: null,
     bill_to_customer_location_id: null,
     bill_to_customer_contact_id: null,
-    bill_to_email_id: null,
+    bill_to_email_id: "gmaturan60@gmail.com",
     bill_to_phone_id: "555-1002",
     pay_online_url:
       "https://app.servicefusion.com/invoiceOnline?id=tos7dtG8o_4DWjZ96vyiuzqGYDfX5jO9HSLugqHPJHQ&key=JK81suPIqG5GT1u1o7BRCPBnCTQKQYw5ueDA5sgaIjg",
@@ -540,7 +540,7 @@ const testInvoices = [
     bill_to_customer_id: null,
     bill_to_customer_location_id: null,
     bill_to_customer_contact_id: null,
-    bill_to_email_id: null,
+    bill_to_email_id: "gmaturan60@gmail.com",
     bill_to_phone_id: "555-1003",
     pay_online_url:
       "https://app.servicefusion.com/invoiceOnline?id=PqmGBwsQ0YQRq9zaFdRUuNlH2f-nFvyEtYc44wIKPkc&key=oPb0SqL1uqA-mEFdUnBiIXLJowcIfCCuDaivkx-9FOk",
@@ -563,7 +563,7 @@ const testInvoices = [
     bill_to_customer_id: null,
     bill_to_customer_location_id: null,
     bill_to_customer_contact_id: null,
-    bill_to_email_id: null,
+    bill_to_email_id: "gmaturan60@gmail.com",
     bill_to_phone_id: "555-1004",
     pay_online_url:
       "https://app.servicefusion.com/invoiceOnline?id=XOFB73mVhVYjl274rCVqqeq_G8DT2ehzKKY0laPWBpI&key=sQsnzMBgcFaVbjqYk4fbbrNyThgQnFNXywum76OgPLk",
