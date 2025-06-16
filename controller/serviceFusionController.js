@@ -121,7 +121,7 @@ getWaitingForPartsJobs = async (req, res) => {
           contact_phone: "(555) 123-1111",
           contact_name: "Derek Ramirez",
           status: "4. Waiting For Parts",
-          sub_status: null,
+          sub_status: "Delivered",
           daysPending: 67,
           category: "endOfLife",
           is_requires_follow_up: false,
