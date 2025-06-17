@@ -456,7 +456,7 @@ function getDueDate(invoice) {
 }
 
 const testInvoices = [
-  // actual COD invoice
+  // actual COD invoice (0-30)
   {
     id: 1027750884,
     number: 98042,
@@ -474,7 +474,7 @@ const testInvoices = [
     bill_to_phone_id: "(619) 298-0511",
   },
 
-  // existing NET30 invoices
+  // NET30 invoices (0-30)
   {
     id: 1026982560,
     number: 97429,
@@ -520,168 +520,54 @@ const testInvoices = [
     customer_contact: "gmaturan60@gmail.com",
     bill_to_email_id: "gmaturan60@gmail.com",
   },
+
+  // 31–60 days past due
   {
-    id: 1026982571,
-    number: 97432,
+    id: 1027750885,
+    number: 98043,
     currency: "$",
     terms: "NET30",
     payment_terms: null,
     pay_online_url:
-      "https://app.servicefusion.com/invoiceOnline?id=wFa9KlmPAEFM1vF5zvFh8SgNa6_or0gvuU-RKwA0fWo&key=83_0992TbLL1RV3GmFrulFLgXW1Vso20CP89cG8f4i4",
-    total: 195,
+      "https://app.servicefusion.com/invoiceOnline?id=EXAMPLE31TO60&key=abcdef123456",
+    total: 300,
     is_paid: false,
-    date: "2025-05-16T00:00:00+00:00",
-    customer: "Big Canyon Villas",
+    date: "2025-04-03T00:00:00+00:00", // dueDate ~2025-05-03 → ~45 days past due on 2025-06-17
+    customer: "Mid Term LLC",
     customer_contact: "gmaturan60@gmail.com",
     bill_to_email_id: "gmaturan60@gmail.com",
   },
+
+  // 61–90 days past due
   {
-    id: 1026982581,
-    number: 97435,
+    id: 1027750886,
+    number: 98044,
     currency: "$",
     terms: "NET30",
     payment_terms: null,
     pay_online_url:
-      "https://app.servicefusion.com/invoiceOnline?id=fdwKIBnS_ct1RZWYP-e1lpTTr439-GWPS4JpCqD7Zbc&key=c9eX8ZQ2dMDw8Cqqu9zP_Tun49iCPRC7OIq6M8FVNfU",
-    total: 182.25,
+      "https://app.servicefusion.com/invoiceOnline?id=EXAMPLE61TO90&key=123456abcdef",
+    total: 400,
     is_paid: false,
-    date: "2025-05-16T00:00:00+00:00",
-    customer: "Park Bonita Apartments",
+    date: "2025-03-04T00:00:00+00:00", // dueDate ~2025-04-03 → ~75 days past due
+    customer: "Longer Term Corp.",
     customer_contact: "gmaturan60@gmail.com",
     bill_to_email_id: "gmaturan60@gmail.com",
   },
+
+  // 91+ days past due
   {
-    id: 1026982584,
-    number: 97436,
+    id: 1027750887,
+    number: 98045,
     currency: "$",
     terms: "NET30",
     payment_terms: null,
     pay_online_url:
-      "https://app.servicefusion.com/invoiceOnline?id=AuwAlsGWClJ3HytVPaU-6JNmIWt90Qqi5WTojG2xgQk&key=S3lnre9qrTQ1Dl_HC9OlPwFkuX-arTbzuEHuwtiI3T0",
-    total: 200,
+      "https://app.servicefusion.com/invoiceOnline?id=EXAMPLE91PLUS&key=abcdef789012",
+    total: 500,
     is_paid: false,
-    date: "2025-05-16T00:00:00+00:00",
-    customer: "Kayne Anderson Rudnick LLC",
-    customer_contact: "gmaturan60@gmail.com",
-    bill_to_email_id: "gmaturan60@gmail.com",
-  },
-  {
-    id: 1026982588,
-    number: 97437,
-    currency: "$",
-    terms: "NET30",
-    payment_terms: null,
-    pay_online_url:
-      "https://app.servicefusion.com/invoiceOnline?id=rTacaJvYjR9hkmCRiksFw_we5i6UFxfNefhXAnPBXEc&key=v3JkHTBN4xsnYbjkUonrk-4EefMwjYIwq7Y8cCHFUFw",
-    total: 250,
-    is_paid: false,
-    date: "2025-05-16T00:00:00+00:00",
-    customer: "Newport Palms",
-    customer_contact: "gmaturan60@gmail.com",
-    bill_to_email_id: "gmaturan60@gmail.com",
-  },
-  {
-    id: 1026982592,
-    number: 97438,
-    currency: "$",
-    terms: "NET30",
-    payment_terms: null,
-    pay_online_url:
-      "https://app.servicefusion.com/invoiceOnline?id=GoEN1r1yQIxS-JOp3AKFyMZNtkZnqJ7zi6q8ltXGJHQ&key=q1lPxMou4zlCzKbBPuGdkQf2nJIaMM0-c7Udssmq0sM",
-    total: 182.25,
-    is_paid: false,
-    date: "2025-05-16T00:00:00+00:00",
-    customer: "Beverly Wilshire Hotel",
-    customer_contact: "gmaturan60@gmail.com",
-    bill_to_email_id: "gmaturan60@gmail.com",
-  },
-  {
-    id: 1026982593,
-    number: 97439,
-    currency: "$",
-    terms: "NET30",
-    payment_terms: null,
-    pay_online_url:
-      "https://app.servicefusion.com/invoiceOnline?id=xqT7oAEn6hXGD38a9i4p5LZmiDt-YyTP4sGq2vedENc&key=VBekoz8hH9zM-fQcruVAEdJQ0LruVu6IfxmQwsNlr34",
-    total: 140.63,
-    is_paid: false,
-    date: "2025-05-16T00:00:00+00:00",
-    customer: "The Residences at Pacific City",
-    customer_contact: "gmaturan60@gmail.com",
-    bill_to_email_id: "gmaturan60@gmail.com",
-  },
-  {
-    id: 1026982596,
-    number: 97440,
-    currency: "$",
-    terms: "NET30",
-    payment_terms: null,
-    pay_online_url:
-      "https://app.servicefusion.com/invoiceOnline?id=oA5ZyjABIkbsl5VXruFdIGyCwr8aDKUpQh-IjWN2FEM&key=I-31J4pxBd8KmG16jSg3neI7-9PF61wDMYgkMSS_i9Y",
-    total: 135,
-    is_paid: false,
-    date: "2025-05-16T00:00:00+00:00",
-    customer: "The Highland at Sherman Oaks",
-    customer_contact: "gmaturan60@gmail.com",
-    bill_to_email_id: "gmaturan60@gmail.com",
-  },
-  {
-    id: 1026982599,
-    number: 97441,
-    currency: "$",
-    terms: "NET30",
-    payment_terms: null,
-    pay_online_url:
-      "https://app.servicefusion.com/invoiceOnline?id=aeSY75XAGwDTZFaEcs5mUJHYhEIh-SnskTWW42kmMoI&key=4dmGywYLij7E79_16rpb0IM-p0PIz_g_I2MCrtI5akA",
-    total: 1148.77,
-    is_paid: false,
-    date: "2025-05-16T00:00:00+00:00",
-    customer: "Arcadia Fire Department 107",
-    customer_contact: "gmaturan60@gmail.com",
-    bill_to_email_id: "gmaturan60@gmail.com",
-  },
-  {
-    id: 1026982602,
-    number: 97442,
-    currency: "$",
-    terms: "NET30",
-    payment_terms: null,
-    pay_online_url:
-      "https://app.servicefusion.com/invoiceOnline?id=CnsA91oc2c8C3FzE2tHcmtwR2yR-1145jxo_qn0MrUs&key=YQDd42AaorNqtsJXqQ3n9HRNU3XmagAqq2RTrKdiQ7c",
-    total: 1194.49,
-    is_paid: false,
-    date: "2025-05-16T00:00:00+00:00",
-    customer: "Park Laurel",
-    customer_contact: "gmaturan60@gmail.com",
-    bill_to_email_id: "gmaturan60@gmail.com",
-  },
-  {
-    id: 1026982604,
-    number: 97443,
-    currency: "$",
-    terms: "NET30",
-    payment_terms: null,
-    pay_online_url:
-      "https://app.servicefusion.com/invoiceOnline?id=dSov9ztuLpTAldDz0mu67ItEYU3nHJkNTCVnE_u-ZwQ&key=I-31J4pxBd8KmG16jSg3neI7-9PF61wDMYgkMSS_i9Y",
-    total: 527.49,
-    is_paid: false,
-    date: "2025-05-16T00:00:00+00:00",
-    customer: "The Highland at Sherman Oaks",
-    customer_contact: "gmaturan60@gmail.com",
-    bill_to_email_id: "gmaturan60@gmail.com",
-  },
-  {
-    id: 1026982608,
-    number: 97444,
-    currency: "$",
-    terms: "NET30",
-    payment_terms: null,
-    pay_online_url:
-      "https://app.servicefusion.com/invoiceOnline?id=mbkoc7Fa-NFzjgshezpGnRTCNw1jAKljI6kXAF7hnzA&key=eqghkAgJdhdfjUwt_rb7vn6U6aP1MQAh8OYWSxn8plk",
-    total: 786.27,
-    is_paid: false,
-    date: "2025-05-16T00:00:00+00:00",
-    customer: "Reserve At South Coast",
+    date: "2025-02-15T00:00:00+00:00", // dueDate ~2025-03-17 → ~92 days past due
+    customer: "Very Long Term LLC",
     customer_contact: "gmaturan60@gmail.com",
     bill_to_email_id: "gmaturan60@gmail.com",
   },
