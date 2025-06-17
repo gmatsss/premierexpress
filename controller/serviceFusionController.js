@@ -579,6 +579,7 @@ const getinvoice = async (req, res) => {
     return res.status(400).json({ error: "Missing access token" });
   }
 
+  // Helper: bucket category
   const bucketCategory = (daysPast) => {
     if (daysPast <= 30) return "0-30_days";
     if (daysPast <= 60) return "31-60_days";
@@ -586,26 +587,54 @@ const getinvoice = async (req, res) => {
     return "91+_days";
   };
 
+  // Helper: parse terms to integer days
   const parseTerms = (termsStr) =>
     parseInt((termsStr || "").replace(/\D/g, ""), 10) || 0;
 
-  if (testMode) {
-    const today = dayjs();
-    const enriched = testInvoices
+  // Decide which categories to include based on today
+  const today = dayjs();
+  const weekday = today.day(); // Sunday=0, Mon=1, Tue=2, Wed=3, Thu=4, Fri=5, Sat=6
+  let allowedCategories = [];
+
+  if (weekday === 2 || weekday === 4 || weekday === 5) {
+    // Tue, Thu & Fri → only 31–60 days past due
+    allowedCategories = ["31-60_days"];
+  } else if (weekday === 1 || weekday === 3) {
+    // Mon & Wed → only 61–90 & 91+ days past due
+    allowedCategories = ["61-90_days", "91+_days"];
+  } else {
+    // Sun & Sat → no processing
+    return res.status(200).json({
+      success: true,
+      count: 0,
+      totalAmount: 0,
+      categoryCounts: {},
+      data: [],
+    });
+  }
+
+  // Shared enrichment + filtering logic
+  const enrichAndFilter = (invoices) =>
+    invoices
       .filter((inv) => !inv.is_paid)
       .map((inv) => {
-        const termDays = parseTerms(inv.payment_terms);
+        const rawTerms = inv.terms ?? inv.payment_terms;
+        const termDays = parseTerms(rawTerms);
         const dueDate = dayjs(inv.date).add(termDays, "day");
         const daysPastDue = today.diff(dueDate, "day");
-        return { ...inv, dueDate: dueDate.format("YYYY-MM-DD"), daysPastDue };
+        return {
+          ...inv,
+          dueDate: dueDate.format("YYYY-MM-DD"),
+          daysPastDue,
+          category: bucketCategory(daysPastDue),
+        };
       })
-      // ⬇️ only truly past-due invoices
-      .filter((inv) => inv.daysPastDue > 0)
-      .map((inv) => ({
-        ...inv,
-        category: bucketCategory(inv.daysPastDue),
-      }));
+      .filter(
+        (inv) => inv.daysPastDue > 0 && allowedCategories.includes(inv.category)
+      );
 
+  if (testMode) {
+    const enriched = enrichAndFilter(testInvoices);
     const totalAmount = enriched.reduce((sum, i) => sum + Number(i.total), 0);
     const categoryCounts = enriched.reduce((acc, i) => {
       acc[i.category] = (acc[i.category] || 0) + 1;
@@ -622,6 +651,7 @@ const getinvoice = async (req, res) => {
     });
   }
 
+  // Production: fetch from Service Fusion API
   const BASE_URL = "https://api.servicefusion.com/v1/invoices";
   const PER_PAGE = 50;
   const FIELDS = [
@@ -650,6 +680,7 @@ const getinvoice = async (req, res) => {
   });
 
   try {
+    // Fetch first page
     const firstResp = await client.get("", {
       params: {
         "filter[is_paid]": false,
@@ -660,7 +691,7 @@ const getinvoice = async (req, res) => {
       },
     });
 
-    // gather all unpaid
+    // Gather all pages
     const allItems = [...(firstResp.data.items || [])];
     const pageCount = Number(
       firstResp.headers["x-pagination-page-count"] ||
@@ -684,23 +715,8 @@ const getinvoice = async (req, res) => {
       pages.forEach((r) => allItems.push(...(r.data.items || [])));
     }
 
-    const today = dayjs();
-    const enriched = allItems
-      .filter((inv) => !inv.is_paid)
-      .map((inv) => {
-        const raw = inv.terms ?? inv.payment_terms;
-        const termDays = parseTerms(raw);
-        const dueDate = dayjs(inv.date).add(termDays, "day");
-        const daysPastDue = today.diff(dueDate, "day");
-        return { ...inv, dueDate: dueDate.format("YYYY-MM-DD"), daysPastDue };
-      })
-      // ⬇️ drop not-yet-due or due-today
-      .filter((inv) => inv.daysPastDue > 0)
-      .map((inv) => ({
-        ...inv,
-        category: bucketCategory(inv.daysPastDue),
-      }));
-
+    // Enrich, filter, summarize
+    const enriched = enrichAndFilter(allItems);
     const totalAmount = enriched.reduce((sum, i) => sum + Number(i.total), 0);
     const categoryCounts = enriched.reduce((acc, i) => {
       acc[i.category] = (acc[i.category] || 0) + 1;
