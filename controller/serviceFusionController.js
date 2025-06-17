@@ -577,98 +577,153 @@ const getinvoice = async (req, res) => {
     return res.status(400).json({ error: "Missing access token" });
   }
 
+  const bucketCategory = (daysPast) => {
+    if (daysPast <= 30) return "0-30_days";
+    if (daysPast <= 60) return "31-60_days";
+    return "61+_days";
+  };
+
+  const parseTerms = (termsStr) =>
+    parseInt((termsStr || "").replace(/\D/g, ""), 10) || 0;
+
   if (testMode) {
+    const today = dayjs();
+    const enriched = testInvoices
+      .filter((inv) => !inv.is_paid)
+      .map((inv) => {
+        const termDays = parseTerms(inv.payment_terms);
+        const dueDate = dayjs(inv.date).add(termDays, "day");
+        const daysPastDue = today.diff(dueDate, "day");
+        return {
+          ...inv,
+          dueDate: dueDate.format("YYYY-MM-DD"),
+          daysPastDue,
+          category: bucketCategory(daysPastDue),
+        };
+      });
+
+    const totalAmount = enriched.reduce(
+      (sum, inv) => sum + Number(inv.total),
+      0
+    );
+    const categoryCounts = enriched.reduce((acc, inv) => {
+      acc[inv.category] = (acc[inv.category] || 0) + 1;
+      return acc;
+    }, {});
+    const count = enriched.length;
+
     return res.status(200).json({
       success: true,
-      allUnpaid: testInvoices.every((inv) => inv.is_paid === false),
-      count: testInvoices.length,
-      data: testInvoices,
+      count,
+      totalAmount,
+      categoryCounts,
+      data: enriched,
     });
   }
 
-  const baseUrl = "https://api.servicefusion.com/v1/invoices";
-  const perPage = 50;
-  let currentPage = 1;
-  let hasMore = true;
-  const today = dayjs();
-  const allResults = [];
+  const BASE_URL = "https://api.servicefusion.com/v1/invoices";
+  const PER_PAGE = 50;
+  const FIELDS = [
+    "id",
+    "number",
+    "date",
+    "total",
+    "is_paid",
+    "currency",
+    "customer",
+    "terms",
+    "payment_terms",
+    "pay_online_url",
+  ].join(",");
+
+  const client = axios.create({
+    baseURL: BASE_URL,
+    timeout: 30000,
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Accept: "application/json",
+    },
+  });
 
   try {
-    while (hasMore) {
-      console.log(`🔄 Fetching page ${currentPage} of unpaid invoices...`);
+    // fetch page 1
+    const firstResp = await client.get("", {
+      params: {
+        "filter[is_paid]": false,
+        "per-page": PER_PAGE,
+        page: 1,
+        sort: "-date",
+        fields: FIELDS,
+      },
+    });
 
-      const { data } = await axios.get(baseUrl, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          Accept: "application/json",
-        },
-        params: {
-          "per-page": perPage,
-          page: currentPage,
-          sort: "-date",
-          "filter[is_paid]": false,
-        },
-      });
-
-      const invoices = data.items || [];
-      invoices.forEach((inv) => {
-        // extra safety check
-        if (inv.is_paid) return;
-
-        const dueDate = getDueDate(inv);
-        const daysPastDue = today.diff(dueDate, "day");
-        let category = "not_due_yet";
-        if (daysPastDue > 0 && daysPastDue <= 30) category = "0-30_days";
-        else if (daysPastDue <= 60) category = "31-60_days";
-        else if (daysPastDue <= 90) category = "61-90_days";
-        else if (daysPastDue > 90) category = "91+_days";
-
-        allResults.push({
-          id: inv.id,
-          number: inv.number,
-          date: inv.date,
-          dueDate: dueDate.format("YYYY-MM-DD"),
-          daysPastDue,
-          total: inv.total,
-          is_paid: inv.is_paid, // ← add this
-          currency: inv.currency,
-          customer: inv.customer,
-          customer_contact: inv.customer_contact,
-          payment_terms: inv.payment_terms,
-          bill_to_customer_id: inv.bill_to_customer_id,
-          bill_to_customer_location_id: inv.bill_to_customer_location_id,
-          bill_to_customer_contact_id: inv.bill_to_customer_contact_id,
-          bill_to_email_id: inv.bill_to_email_id,
-          bill_to_phone_id: inv.bill_to_phone_id,
-          pay_online_url: inv.pay_online_url,
-          category,
-        });
-      });
-
-      console.log(
-        `📦 Page ${currentPage} added ${invoices.length} unpaid invoices ` +
-          `(running total: ${allResults.length})`
+    // gather all pages
+    const allItems = [...(firstResp.data.items || [])];
+    const pageCount = Number(
+      firstResp.headers["x-pagination-page-count"] ||
+        firstResp.data._meta?.pageCount ||
+        1
+    );
+    if (pageCount > 1) {
+      const pages = await Promise.all(
+        Array.from({ length: pageCount - 1 }, (_, i) =>
+          client.get("", {
+            params: {
+              "filter[is_paid]": false,
+              "per-page": PER_PAGE,
+              page: i + 2,
+              sort: "-date",
+              fields: FIELDS,
+            },
+          })
+        )
       );
-
-      currentPage++;
-      hasMore = currentPage <= (data._meta?.pageCount || 1);
+      pages.forEach((r) => allItems.push(...(r.data.items || [])));
     }
 
-    // sanity check
-    const allAreUnpaid = allResults.every((inv) => inv.is_paid === false);
-    console.log(`✅ All fetched invoices unpaid? ${allAreUnpaid}`);
+    const today = dayjs();
+    const enriched = allItems
+      .filter((inv) => !inv.is_paid)
+      .map((inv) => {
+        const raw = inv.terms ?? inv.payment_terms;
+        const termDays = parseTerms(raw);
+        const dueDate = dayjs(inv.date).add(termDays, "day");
+        const daysPast = today.diff(dueDate, "day");
+        return {
+          ...inv,
+          dueDate: dueDate.format("YYYY-MM-DD"),
+          daysPastDue: daysPast,
+        };
+      })
+      // ← make sure we only keep truly past-due
+      .filter((inv) => inv.daysPastDue > 0)
+      .map((inv) => ({
+        ...inv,
+        category: bucketCategory(inv.daysPastDue),
+      }));
+
+    const totalAmount = enriched.reduce(
+      (sum, inv) => sum + Number(inv.total),
+      0
+    );
+    const categoryCounts = enriched.reduce((acc, inv) => {
+      acc[inv.category] = (acc[inv.category] || 0) + 1;
+      return acc;
+    }, {});
+    const count = enriched.length;
 
     return res.status(200).json({
       success: true,
-      allUnpaid: allAreUnpaid, // ← tells you if any slipped through
-      count: allResults.length,
-      data: allResults,
+      count,
+      totalAmount,
+      categoryCounts,
+      data: enriched,
     });
-  } catch (error) {
-    console.error("❌ Error fetching invoices:", error.message);
+  } catch (err) {
+    console.error("Error fetching unpaid invoices:", err);
     return res.status(500).json({
-      error: "Failed to fetch invoices from Service Fusion.",
-      details: error.message,
+      error: "Failed to fetch unpaid invoices",
+      details: err.message,
     });
   }
 };
