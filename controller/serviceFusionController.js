@@ -580,7 +580,8 @@ const getinvoice = async (req, res) => {
   const bucketCategory = (daysPast) => {
     if (daysPast <= 30) return "0-30_days";
     if (daysPast <= 60) return "31-60_days";
-    return "61+_days";
+    if (daysPast <= 90) return "61-90_days";
+    return "91+_days";
   };
 
   const parseTerms = (termsStr) =>
@@ -594,20 +595,18 @@ const getinvoice = async (req, res) => {
         const termDays = parseTerms(inv.payment_terms);
         const dueDate = dayjs(inv.date).add(termDays, "day");
         const daysPastDue = today.diff(dueDate, "day");
-        return {
-          ...inv,
-          dueDate: dueDate.format("YYYY-MM-DD"),
-          daysPastDue,
-          category: bucketCategory(daysPastDue),
-        };
-      });
+        return { ...inv, dueDate: dueDate.format("YYYY-MM-DD"), daysPastDue };
+      })
+      // ⬇️ only truly past-due invoices
+      .filter((inv) => inv.daysPastDue > 0)
+      .map((inv) => ({
+        ...inv,
+        category: bucketCategory(inv.daysPastDue),
+      }));
 
-    const totalAmount = enriched.reduce(
-      (sum, inv) => sum + Number(inv.total),
-      0
-    );
-    const categoryCounts = enriched.reduce((acc, inv) => {
-      acc[inv.category] = (acc[inv.category] || 0) + 1;
+    const totalAmount = enriched.reduce((sum, i) => sum + Number(i.total), 0);
+    const categoryCounts = enriched.reduce((acc, i) => {
+      acc[i.category] = (acc[i.category] || 0) + 1;
       return acc;
     }, {});
     const count = enriched.length;
@@ -646,7 +645,6 @@ const getinvoice = async (req, res) => {
   });
 
   try {
-    // fetch page 1
     const firstResp = await client.get("", {
       params: {
         "filter[is_paid]": false,
@@ -657,7 +655,7 @@ const getinvoice = async (req, res) => {
       },
     });
 
-    // gather all pages
+    // gather all unpaid
     const allItems = [...(firstResp.data.items || [])];
     const pageCount = Number(
       firstResp.headers["x-pagination-page-count"] ||
@@ -688,26 +686,19 @@ const getinvoice = async (req, res) => {
         const raw = inv.terms ?? inv.payment_terms;
         const termDays = parseTerms(raw);
         const dueDate = dayjs(inv.date).add(termDays, "day");
-        const daysPast = today.diff(dueDate, "day");
-        return {
-          ...inv,
-          dueDate: dueDate.format("YYYY-MM-DD"),
-          daysPastDue: daysPast,
-        };
+        const daysPastDue = today.diff(dueDate, "day");
+        return { ...inv, dueDate: dueDate.format("YYYY-MM-DD"), daysPastDue };
       })
-      // ← make sure we only keep truly past-due
+      // ⬇️ drop not-yet-due or due-today
       .filter((inv) => inv.daysPastDue > 0)
       .map((inv) => ({
         ...inv,
         category: bucketCategory(inv.daysPastDue),
       }));
 
-    const totalAmount = enriched.reduce(
-      (sum, inv) => sum + Number(inv.total),
-      0
-    );
-    const categoryCounts = enriched.reduce((acc, inv) => {
-      acc[inv.category] = (acc[inv.category] || 0) + 1;
+    const totalAmount = enriched.reduce((sum, i) => sum + Number(i.total), 0);
+    const categoryCounts = enriched.reduce((acc, i) => {
+      acc[i.category] = (acc[i.category] || 0) + 1;
       return acc;
     }, {});
     const count = enriched.length;
