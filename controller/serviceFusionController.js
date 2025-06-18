@@ -469,7 +469,7 @@ const testInvoices = [
     is_paid: false,
     date: "2025-04-03T00:00:00+00:00",
     customer: "The Handlery",
-    customer_contact: "gmaturan60@gmail.com",
+    customer_contact: "Jessica Valdez",
     bill_to_email_id: "gmaturan60@gmail.com",
     bill_to_phone_id: "(619) 298-0511",
   },
@@ -487,7 +487,7 @@ const testInvoices = [
     is_paid: false,
     date: "2025-04-03T00:00:00+00:00",
     customer: "Aloft San Antonio Airport",
-    customer_contact: "gmaturan60@gmail.com",
+    customer_contact: "Jessica Valdez",
     bill_to_email_id: "gmaturan60@gmail.com",
   },
   {
@@ -502,7 +502,7 @@ const testInvoices = [
     is_paid: false,
     date: "2025-04-03T00:00:00+00:00",
     customer: "Northrop 160",
-    customer_contact: "gmaturan60@gmail.com",
+    customer_contact: "Jessica Valdez",
     bill_to_email_id: "gmaturan60@gmail.com",
   },
   {
@@ -517,7 +517,7 @@ const testInvoices = [
     is_paid: false,
     date: "2025-04-03T00:00:00+00:00",
     customer: "Harbor Village Apts",
-    customer_contact: "gmaturan60@gmail.com",
+    customer_contact: "Jessica Valdez",
     bill_to_email_id: "gmaturan60@gmail.com",
   },
 
@@ -534,7 +534,7 @@ const testInvoices = [
     is_paid: false,
     date: "2025-04-03T00:00:00+00:00", // dueDate ~2025-05-03 → ~45 days past due on 2025-06-17
     customer: "Mid Term LLC",
-    customer_contact: "gmaturan60@gmail.com",
+    customer_contact: "Jessica Valdez",
     bill_to_email_id: "gmaturan60@gmail.com",
   },
 
@@ -551,7 +551,7 @@ const testInvoices = [
     is_paid: false,
     date: "2025-03-04T00:00:00+00:00", // dueDate ~2025-04-03 → ~75 days past due
     customer: "Longer Term Corp.",
-    customer_contact: "gmaturan60@gmail.com",
+    customer_contact: "Jessica Valdez",
     bill_to_email_id: "gmaturan60@gmail.com",
   },
 
@@ -568,7 +568,7 @@ const testInvoices = [
     is_paid: false,
     date: "2025-02-15T00:00:00+00:00", // dueDate ~2025-03-17 → ~92 days past due
     customer: "Very Long Term LLC",
-    customer_contact: "gmaturan60@gmail.com",
+    customer_contact: "Jessica Valdez",
     bill_to_email_id: "gmaturan60@gmail.com",
   },
 ];
