@@ -489,6 +489,7 @@ const testInvoices = [
     customer: "Aloft San Antonio Airport",
     customer_contact: "Jessica Valdez",
     bill_to_email_id: "gmaturan60@gmail.com",
+    bill_to_phone_id: "(619) 298-0511",
   },
   {
     id: 1026982563,
@@ -504,6 +505,7 @@ const testInvoices = [
     customer: "Northrop 160",
     customer_contact: "Jessica Valdez",
     bill_to_email_id: "gmaturan60@gmail.com",
+    bill_to_phone_id: "(619) 298-0511",
   },
   {
     id: 1026982565,
@@ -519,6 +521,7 @@ const testInvoices = [
     customer: "Harbor Village Apts",
     customer_contact: "Jessica Valdez",
     bill_to_email_id: "gmaturan60@gmail.com",
+    bill_to_phone_id: "(619) 298-0511",
   },
 
   // 31–60 days past due
@@ -536,6 +539,7 @@ const testInvoices = [
     customer: "Mid Term LLC",
     customer_contact: "Jessica Valdez",
     bill_to_email_id: "gmaturan60@gmail.com",
+    bill_to_phone_id: "(619) 298-0511",
   },
 
   // 61–90 days past due
@@ -553,6 +557,7 @@ const testInvoices = [
     customer: "Longer Term Corp.",
     customer_contact: "Jessica Valdez",
     bill_to_email_id: "gmaturan60@gmail.com",
+    bill_to_phone_id: "(619) 298-0511",
   },
 
   // 91+ days past due
@@ -570,6 +575,7 @@ const testInvoices = [
     customer: "Very Long Term LLC",
     customer_contact: "Jessica Valdez",
     bill_to_email_id: "gmaturan60@gmail.com",
+    bill_to_phone_id: "(619) 298-0511",
   },
 ];
 
