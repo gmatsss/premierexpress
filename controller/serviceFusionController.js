@@ -580,14 +580,14 @@ const testInvoices = [
 ];
 
 const getinvoice = async (req, res) => {
+  const startTime = Date.now();
   const { accessToken, testMode } = req.body;
+  console.log("getInvoice called", { testMode });
+
   if (!accessToken) {
-    console.warn("[getinvoice] Missing access token");
+    console.error("Missing access token");
     return res.status(400).json({ error: "Missing access token" });
   }
-
-  console.info("[getinvoice] Request received at", new Date().toISOString());
-  const startTime = Date.now();
 
   const bucketCategory = (daysPast) => {
     if (daysPast <= 30) return "0-30_days";
@@ -619,7 +619,7 @@ const getinvoice = async (req, res) => {
   };
 
   if (testMode) {
-    console.info("[getinvoice] Running in test mode");
+    console.log("Running in test mode");
     const enriched = enrich(testInvoices);
     const totalAmount = enriched.reduce((sum, i) => sum + Number(i.total), 0);
     const categoryCounts = enriched.reduce((acc, i) => {
@@ -628,36 +628,44 @@ const getinvoice = async (req, res) => {
     }, {});
     const count = enriched.length;
 
-    console.info(
-      `[getinvoice] Test result — Invoices: ${count}, Total: ${totalAmount}`
-    );
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log("Test mode results", { count, totalAmount, categoryCounts });
+    console.log(`getInvoice completed in ${duration}s`);
     return res.status(200).json({
       success: true,
       count,
       totalAmount,
       categoryCounts,
       data: enriched,
+      duration: `${duration}s`,
     });
   }
 
+  console.log("Running in production mode");
   const today = dayjs();
   const weekday = today.day();
-  let allowedCategories = [];
+  console.log("Today is weekday number", weekday);
 
+  let allowedCategories = [];
   if ([2, 4, 5].includes(weekday)) {
     allowedCategories = ["31-60_days"];
   } else if ([1, 3].includes(weekday)) {
     allowedCategories = ["61-90_days", "91+_days"];
   } else {
-    console.info("[getinvoice] No processing needed on weekends");
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log("Weekend—nothing to process");
+    console.log(`getInvoice completed in ${duration}s`);
     return res.status(200).json({
       success: true,
       count: 0,
       totalAmount: 0,
       categoryCounts: {},
       data: [],
+      duration: `${duration}s`,
     });
   }
+
+  console.log("Allowed categories for processing:", allowedCategories);
 
   const enrichAndFilter = (invoices) =>
     enrich(invoices).filter((inv) => allowedCategories.includes(inv.category));
@@ -682,7 +690,7 @@ const getinvoice = async (req, res) => {
 
   const client = axios.create({
     baseURL: BASE_URL,
-    timeout: 120000,
+    timeout: 30000,
     headers: {
       Authorization: `Bearer ${accessToken}`,
       Accept: "application/json",
@@ -690,9 +698,7 @@ const getinvoice = async (req, res) => {
   });
 
   try {
-    console.info("[getinvoice] Fetching page 1 of invoices...");
-    const fetchStart = Date.now();
-
+    console.log("Fetching first page of invoices");
     const first = await client.get("", {
       params: {
         "filter[is_paid]": false,
@@ -702,36 +708,35 @@ const getinvoice = async (req, res) => {
         fields: FIELDS,
       },
     });
-
-    console.info(`[getinvoice] Page 1 fetched in ${Date.now() - fetchStart}ms`);
     const allItems = [...(first.data.items || [])];
     const pageCount = Number(
       first.headers["x-pagination-page-count"] ||
         first.data._meta?.pageCount ||
         1
     );
-
-    console.info(`[getinvoice] Total pages to fetch: ${pageCount}`);
+    console.log(
+      `Page 1 fetched: ${allItems.length} items; total pages: ${pageCount}`
+    );
 
     if (pageCount > 1) {
-      for (let i = 2; i <= pageCount; i++) {
-        console.info(`[getinvoice] Fetching page ${i}...`);
-        const pageResp = await client.get("", {
-          params: {
-            "filter[is_paid]": false,
-            "per-page": PER_PAGE,
-            page: i,
-            sort: "-date",
-            fields: FIELDS,
-          },
-        });
-        allItems.push(...(pageResp.data.items || []));
-        console.info(`[getinvoice] Page ${i} fetched`);
-      }
+      console.log("Fetching remaining pages");
+      const pages = await Promise.all(
+        Array.from({ length: pageCount - 1 }, (_, i) =>
+          client.get("", {
+            params: {
+              "filter[is_paid]": false,
+              "per-page": PER_PAGE,
+              page: i + 2,
+              sort: "-date",
+              fields: FIELDS,
+            },
+          })
+        )
+      );
+      pages.forEach((r) => allItems.push(...(r.data.items || [])));
+      console.log(`All pages fetched: ${allItems.length} total items`);
     }
 
-    console.info(`[getinvoice] Total invoices fetched: ${allItems.length}`);
-    const enrichStart = Date.now();
     const enriched = enrichAndFilter(allItems);
     const totalAmount = enriched.reduce((sum, i) => sum + Number(i.total), 0);
     const categoryCounts = enriched.reduce((acc, i) => {
@@ -740,23 +745,25 @@ const getinvoice = async (req, res) => {
     }, {});
     const count = enriched.length;
 
-    console.info(`[getinvoice] Enrichment took ${Date.now() - enrichStart}ms`);
-    console.info(`[getinvoice] Final count: ${count}, Total: ${totalAmount}`);
-    console.info(`[getinvoice] Categories: ${JSON.stringify(categoryCounts)}`);
-    console.info(`[getinvoice] Total time: ${Date.now() - startTime}ms`);
-
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log("Final results", { count, totalAmount, categoryCounts });
+    console.log(`getInvoice completed in ${duration}s`);
     return res.status(200).json({
       success: true,
       count,
       totalAmount,
       categoryCounts,
       data: enriched,
+      duration: `${duration}s`,
     });
   } catch (err) {
-    console.error("[getinvoice] Error fetching unpaid invoices:", err.message);
+    console.error("Error fetching unpaid invoices:", err.message);
+    const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+    console.log(`getInvoice failed after ${duration}s`);
     return res.status(500).json({
       error: "Failed to fetch unpaid invoices",
       details: err.message,
+      duration: `${duration}s`,
     });
   }
 };
