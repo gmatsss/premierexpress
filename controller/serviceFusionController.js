@@ -690,7 +690,7 @@ const getinvoice = async (req, res) => {
 
   const client = axios.create({
     baseURL: BASE_URL,
-    timeout: 30000,
+    timeout: 2 * 60 * 1000,
     headers: {
       Authorization: `Bearer ${accessToken}`,
       Accept: "application/json",
